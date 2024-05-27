@@ -5,7 +5,7 @@ import net.fabricmc.fabric.api.event.registry.RegistryAttribute
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.SimpleRegistry
 import net.minecraft.util.Identifier
-import richiesams.omniconduit.conduits.Conduit
+import richiesams.omniconduit.api.conduits.Conduit
 
 object OnmiConduitRegistries {
     val CONDUIT: SimpleRegistry<Conduit> = FabricRegistryBuilder.createSimple(

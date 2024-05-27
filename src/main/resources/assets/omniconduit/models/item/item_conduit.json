@@ -1,0 +1,20 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "all": "omniconduit:block/conduit/item_conduit_core"
+  },
+  "elements": [
+    {
+      "from": [ 2.5, 2.5, 2.5 ],
+      "to": [ 13.5, 13.5, 13.5 ],
+      "faces": {
+        "north": { "uv": [ 2, 2, 14, 14 ], "texture": "#all" },
+        "east": { "uv": [ 2, 2, 14, 14 ], "texture": "#all" },
+        "south": { "uv": [ 2, 2, 14, 14 ], "texture": "#all" },
+        "west": { "uv": [ 2, 2, 14, 14 ], "texture": "#all" },
+        "up": { "uv": [ 2, 2, 14, 14 ], "texture": "#all" },
+        "down": { "uv": [ 2, 2, 14, 14 ], "texture": "#all" }
+      }
+    }
+  ]
+}

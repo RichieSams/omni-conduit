@@ -1,0 +1,20 @@
+{
+  "eastWestOffset": "south",
+  "upDownOffset": "east",
+  "northSouthOffset": "east",
+
+  "core": {
+    "texture": "omniconduit:block/conduit/item_conduit_core",
+    "uv": [ 2, 2, 14, 14 ]
+  },
+  "connector": {
+    "inner": {
+      "texture": "omniconduit:block/conduit/item_conduit_inner",
+      "uv": [ 1.5, 6, 14.5, 10 ]
+    },
+    "outer": {
+      "texture": "omniconduit:block/conduit/conduit_connector_0",
+      "uv": [ 0, 0, 13, 4 ]
+    }
+  }
+}

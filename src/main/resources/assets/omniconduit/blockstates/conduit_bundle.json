@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "": { "model": "omniconduit:block/conduit_bundle" }
+  }
+}

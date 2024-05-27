@@ -1,11 +1,19 @@
-package richiesams.omniconduit.conduits
+package richiesams.omniconduit.api.conduits
 
 import com.google.gson.JsonObject
 import com.google.gson.JsonSyntaxException
+import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
+import net.minecraft.registry.Registries
+import net.minecraft.util.Identifier
+import richiesams.omniconduit.OnmiConduitRegistries
+import richiesams.omniconduit.blockentities.ConduitBundleBlockEntity
 import richiesams.omniconduit.util.SerializationUtil
 import richiesams.omniconduit.util.SpriteReference
 
-class Conduit(jsonObject: JsonObject) {
+
+open class Conduit(jsonObject: JsonObject, factory: Conduit.Factory<out ConduitEntity>) {
     val EastWestOffset: ConduitOffset = SerializationUtil.GSON.fromJson(jsonObject["eastWestOffset"], ConduitOffset::class.java)
     val UpDownOffset: ConduitOffset = SerializationUtil.GSON.fromJson(jsonObject["upDownOffset"], ConduitOffset::class.java)
     val NorthSouthOffset: ConduitOffset = SerializationUtil.GSON.fromJson(jsonObject["northSouthOffset"], ConduitOffset::class.java)
@@ -13,6 +21,9 @@ class Conduit(jsonObject: JsonObject) {
     val CoreSprite: SpriteReference
     val ConnectorOuterSprite: SpriteReference
     var ConnectorInnerSprite: SpriteReference? = null
+
+
+    private val factory: Factory<out ConduitEntity> = factory
 
 //    private val factory: Factory<out ConduitEntity?>
 
@@ -30,25 +41,25 @@ class Conduit(jsonObject: JsonObject) {
         } else {
             this.ConnectorInnerSprite = SpriteReference.fromJSON(connectorInner)
         }
-
-//        this.factory = factory
     }
-//
-//    fun toItemStack(): ItemStack {
-//        val identifier: Identifier = EnderIOReforgedRegistries.CONDUIT.getId(this)
-//        val item: Item = Registries.ITEM.get(identifier)
-//        if (item === Items.AIR) {
-//            OmniConduitModBase.LOGGER.warn("Failed to get Conduit item for %s".formatted(identifier))
-//        }
-//
-//        return item.defaultStack
-//    }
-//
-//    fun createConduitEntity(blockEntity: ConduitBundleBlockEntity?): ConduitEntity? {
-//        return factory.create(this, blockEntity)
-//    }
-//
-//    fun interface Factory<T : ConduitEntity?> {
-//        fun create(conduit: Conduit?, blockEntity: ConduitBundleBlockEntity?): T
-//    }
+
+
+    fun toItemStack(): ItemStack {
+        val identifier: Identifier = OnmiConduitRegistries.CONDUIT.getId(this) ?: throw RuntimeException("No conduit registered for ConduitEntity")
+
+        val item: Item = Registries.ITEM.get(identifier)
+        if (item === Items.AIR) {
+            throw RuntimeException("Failed to get Conduit item for $identifier")
+        }
+
+        return item.defaultStack
+    }
+
+    fun createConduitEntity(blockEntity: ConduitBundleBlockEntity): ConduitEntity {
+        return factory.create(this, blockEntity)
+    }
+
+    fun interface Factory<T : ConduitEntity> {
+        fun create(conduit: Conduit, blockEntity: ConduitBundleBlockEntity): T
+    }
 }

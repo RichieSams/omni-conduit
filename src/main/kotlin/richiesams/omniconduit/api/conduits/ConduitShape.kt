@@ -1,4 +1,4 @@
-package richiesams.omniconduit.conduits
+package richiesams.omniconduit.api.conduits
 
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction

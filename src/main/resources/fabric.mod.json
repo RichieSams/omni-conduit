@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
-  "id": "omni-conduit",
-  "version": "${version}",
-  "name": "omni-conduit",
-  "description": "This is an example description! Tell everyone what your mod is about!",
+  "id": "omniconduit",
+  "version": "1.0.0",
+  "name": "Omni Conduit",
+  "description": "A mod that adds conduits that can share the same space in a single block. No more spaghetti!",
   "authors": [
-    "Me!"
+    "RichieSams"
   ],
   "contact": {
     "homepage": "https://fabricmc.net/",
     "sources": "https://github.com/FabricMC/fabric-example-mod"
   },
   "license": "CC0-1.0",
-  "icon": "assets/omni-conduit/icon.png",
+  "icon": "assets/omniconduit/icon.png",
   "environment": "*",
   "entrypoints": {
     "main": [
@@ -34,13 +34,7 @@
       }
     ]
   },
-  "mixins": [
-    "omni-conduit.mixins.json",
-    {
-      "config": "omni-conduit.client.mixins.json",
-      "environment": "client"
-    }
-  ],
+  "mixins": [ ],
   "depends": {
     "fabricloader": ">=0.15.11",
     "minecraft": "~1.20.6",
@@ -48,7 +42,5 @@
     "fabric-api": "*",
     "fabric-language-kotlin": ">=1.11.0+kotlin.2.0.0"
   },
-  "suggests": {
-    "another-mod": "*"
-  }
+  "suggests": { }
 }

@@ -1,4 +1,4 @@
-package richiesams.omniconduit.conduits
+package richiesams.omniconduit.api.conduits
 
 import com.google.gson.*
 import com.google.gson.annotations.JsonAdapter
