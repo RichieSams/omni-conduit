@@ -1,10 +1,11 @@
-package richiesams.omniconduit
+package richiesams.omniconduit.api
 
 import net.fabricmc.fabric.api.event.registry.FabricRegistryBuilder
 import net.fabricmc.fabric.api.event.registry.RegistryAttribute
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.SimpleRegistry
 import net.minecraft.util.Identifier
+import richiesams.omniconduit.OmniConduitModBase
 import richiesams.omniconduit.api.conduits.Conduit
 
 object OnmiConduitRegistries {

@@ -50,5 +50,8 @@ object OmniConduitModBase : ModInitializer {
 
     private fun addItemGroupEntries(entries: ItemGroup.Entries) {
         entries.add(ModItems.ITEM_CONDUIT)
+        entries.add(ModItems.BASIC_ENERGY_CONDUIT)
+        entries.add(ModItems.BASIC_FLUID_CONDUIT)
+        entries.add(ModItems.REDSTONE_CONDUIT)
     }
 }

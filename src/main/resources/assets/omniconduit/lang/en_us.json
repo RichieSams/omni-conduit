@@ -1,5 +1,8 @@
 {
   "itemGroup.omniconduit.base_group": "Omni Conduit",
 
-  "item.omniconduit.item_conduit": "Item Conduit"
+  "item.omniconduit.item_conduit": "Item Conduit",
+  "item.omniconduit.basic_energy_conduit": "Basic Energy Conduit",
+  "item.omniconduit.basic_fluid_conduit": "Basic Fluid Conduit",
+  "item.omniconduit.redstone_conduit": "Redstone Conduit"
 }

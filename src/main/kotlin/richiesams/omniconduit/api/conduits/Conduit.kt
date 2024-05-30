@@ -7,13 +7,13 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
-import richiesams.omniconduit.OnmiConduitRegistries
+import richiesams.omniconduit.api.OnmiConduitRegistries
 import richiesams.omniconduit.blockentities.ConduitBundleBlockEntity
 import richiesams.omniconduit.util.SerializationUtil
 import richiesams.omniconduit.util.SpriteReference
 
 
-open class Conduit(jsonObject: JsonObject, factory: Conduit.Factory<out ConduitEntity>) {
+open class Conduit(jsonObject: JsonObject, private val factory: Factory<out ConduitEntity>) {
     val EastWestOffset: ConduitOffset = SerializationUtil.GSON.fromJson(jsonObject["eastWestOffset"], ConduitOffset::class.java)
     val UpDownOffset: ConduitOffset = SerializationUtil.GSON.fromJson(jsonObject["upDownOffset"], ConduitOffset::class.java)
     val NorthSouthOffset: ConduitOffset = SerializationUtil.GSON.fromJson(jsonObject["northSouthOffset"], ConduitOffset::class.java)
@@ -22,10 +22,6 @@ open class Conduit(jsonObject: JsonObject, factory: Conduit.Factory<out ConduitE
     val ConnectorOuterSprite: SpriteReference
     var ConnectorInnerSprite: SpriteReference? = null
 
-
-    private val factory: Factory<out ConduitEntity> = factory
-
-//    private val factory: Factory<out ConduitEntity?>
 
     init {
         val core = jsonObject.getAsJsonObject("core") ?: throw JsonSyntaxException("Missing \"core\" section in conduit definition")

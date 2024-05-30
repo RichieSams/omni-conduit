@@ -4,7 +4,7 @@ import net.minecraft.nbt.NbtCompound
 import net.minecraft.nbt.NbtList
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.Direction
-import richiesams.omniconduit.OnmiConduitRegistries
+import richiesams.omniconduit.api.OnmiConduitRegistries
 import richiesams.omniconduit.blockentities.ConduitBundleBlockEntity
 
 

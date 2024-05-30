@@ -1,0 +1,18 @@
+{
+  "eastWestOffset": "down",
+  "upDownOffset": "south",
+  "northSouthOffset": "down",
+
+  "core": {
+    "texture": "omniconduit:block/conduit/conduit_core_0",
+    "uv": [ 0, 0, 8, 8 ]
+  },
+  "connector": {
+    "outer": {
+      "texture": "omniconduit:block/conduit/energy_conduit",
+      "uv": [ 0, 0, 13, 4 ]
+    }
+  },
+
+  "max_transfer": 1000
+}

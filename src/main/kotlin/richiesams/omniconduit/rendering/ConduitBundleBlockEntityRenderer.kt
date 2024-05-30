@@ -19,13 +19,12 @@ import net.minecraft.util.math.Vec2f
 import net.minecraft.util.math.Vec3d
 import org.joml.Matrix4f
 import richiesams.omniconduit.OmniConduitModBase
-import richiesams.omniconduit.OnmiConduitRegistries
+import richiesams.omniconduit.api.OnmiConduitRegistries
 import richiesams.omniconduit.blockentities.ConduitBundleBlockEntity
 import richiesams.omniconduit.util.SpriteReference
 
 @Environment(EnvType.CLIENT)
-class ConduitBundleBlockEntityRenderer(ctx: BlockEntityRendererFactory.Context?) :
-    BlockEntityRenderer<ConduitBundleBlockEntity> {
+class ConduitBundleBlockEntityRenderer(ctx: BlockEntityRendererFactory.Context?) : BlockEntityRenderer<ConduitBundleBlockEntity> {
     private val sprites: HashMap<Identifier, Sprite> = HashMap<Identifier, Sprite>()
     private val missingSprite: Sprite
 
@@ -59,14 +58,7 @@ class ConduitBundleBlockEntityRenderer(ctx: BlockEntityRendererFactory.Context?)
         DEGREES_270
     }
 
-    override fun render(
-        entity: ConduitBundleBlockEntity,
-        tickDelta: Float,
-        matrices: MatrixStack,
-        vertexConsumers: VertexConsumerProvider,
-        light: Int,
-        overlay: Int
-    ) {
+    override fun render(entity: ConduitBundleBlockEntity, tickDelta: Float, matrices: MatrixStack, vertexConsumers: VertexConsumerProvider, light: Int, overlay: Int) {
         val shape = entity.getConduitShape()
 
         matrices.push()
@@ -359,13 +351,7 @@ class ConduitBundleBlockEntityRenderer(ctx: BlockEntityRendererFactory.Context?)
     }
 
 
-    private fun renderCuboid(
-        vertexConsumer: VertexConsumer,
-        spriteMap: Map<Identifier, Sprite>,
-        positionMatrix: Matrix4f,
-        cube: Box,
-        spriteRef: SpriteReference
-    ) {
+    private fun renderCuboid(vertexConsumer: VertexConsumer, spriteMap: Map<Identifier, Sprite>, positionMatrix: Matrix4f, cube: Box, spriteRef: SpriteReference) {
         val sprite: Sprite = spriteMap[spriteRef.identifier] ?: missingSprite
 
         // Render all the faces
@@ -384,16 +370,7 @@ class ConduitBundleBlockEntityRenderer(ctx: BlockEntityRendererFactory.Context?)
     }
 
 
-    private fun renderCuboidFace(
-        vertexConsumer: VertexConsumer,
-        positionMatrix: Matrix4f,
-        direction: Direction,
-        cube: Box,
-        sprite: Sprite,
-        uvFrom: Vec2f,
-        uvTo: Vec2f,
-        uvRotation: Rotation
-    ) {
+    private fun renderCuboidFace(vertexConsumer: VertexConsumer, positionMatrix: Matrix4f, direction: Direction, cube: Box, sprite: Sprite, uvFrom: Vec2f, uvTo: Vec2f, uvRotation: Rotation) {
         when (direction) {
             Direction.DOWN -> {
                 renderQuad(
