@@ -23,6 +23,7 @@ import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.shape.VoxelShape
 import net.minecraft.util.shape.VoxelShapes
+import net.minecraft.world.World
 import richiesams.omniconduit.OmniConduitModBase
 import richiesams.omniconduit.api.conduits.*
 import richiesams.omniconduit.conduits.ConduitShapeHelper
@@ -34,12 +35,25 @@ class ConduitBundleBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity
     companion object {
         private const val coreHitboxExpansion: Double = 0.25 / 16.0
         private const val connectionHitboxExpansion: Double = 0.75 / 16.0
+
+        fun tick(world: World, pos: BlockPos, state: BlockState, entity: ConduitBundleBlockEntity) {
+            if (world.isClient) {
+                return
+            }
+
+            var markDirty = false
+            for (conduit in entity.conduitEntities) {
+                markDirty = markDirty || conduit.tick(world, pos, state)
+            }
+
+            if (markDirty) {
+                entity.markDirty()
+            }
+        }
     }
 
     private var conduitShape: AtomicReference<ConduitShape> = AtomicReference(ConduitShape(ArrayList(), ArrayList()))
-
     private var conduitEntities: MutableList<ConduitEntity> = ArrayList()
-
 
     fun getConduitShape(): ConduitShape {
         return conduitShape.get()
@@ -145,8 +159,8 @@ class ConduitBundleBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity
     }
 
     private fun regenerateShape() {
-        val cores = ArrayList<CoreShape>()
-        val connections = ArrayList<ConnectionShape>()
+        val coreShapes = ArrayList<CoreShape>()
+        val connectionShapes = ArrayList<ConnectionShape>()
 
         var overrideOffset: ConduitOffset? = null
         if (conduitEntities.size == 1) {
@@ -162,68 +176,67 @@ class ConduitBundleBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity
             var eastWestConnection = false
             var upDownConnection = false
 
-            // TODO: For now we just create connections in ALL directions
-            for (direction in Direction.entries) {
+            val connections = conduitEntity.getConnections()
+            for (entry in connections) {
                 var offset: ConduitOffset
-                when (direction) {
+                when (entry.key) {
                     Direction.NORTH, Direction.SOUTH -> {
-                        offset = overrideOffset ?: backingConduit.NorthSouthOffset
+                        offset = overrideOffset ?: backingConduit.northSouthOffset
                         northSouthConnection = true
                     }
 
                     Direction.EAST, Direction.WEST -> {
-                        offset = overrideOffset ?: backingConduit.EastWestOffset
+                        offset = overrideOffset ?: backingConduit.eastWestOffset
                         eastWestConnection = true
                     }
 
                     Direction.UP, Direction.DOWN -> {
-                        offset = overrideOffset ?: backingConduit.UpDownOffset
+                        offset = overrideOffset ?: backingConduit.upDownOffset
                         upDownConnection = true
                     }
                 }
 
-                connections.add(
+                connectionShapes.add(
                     ConnectionShape(
-                        backingConduit.ConnectorOuterSprite,
-                        backingConduit.ConnectorInnerSprite,
-                        ConduitShapeHelper.connectorFromOffset(offset, direction),
-                        direction
+                        backingConduit.connectorOuterSprite,
+                        backingConduit.connectorInnerSprite,
+                        ConduitShapeHelper.connectorFromOffset(offset, entry.key),
+                        entry.key
                     )
                 )
             }
 
             // If there aren't any connections, then add a core at NorthSouth offset
-            // TODO: Update this when we stop adding all the connections
-            if (false) {
-                cores.add(
+            if (connections.isEmpty()) {
+                coreShapes.add(
                     CoreShape(
-                        backingConduit.CoreSprite,
-                        ConduitShapeHelper.coreFromOffset(overrideOffset ?: backingConduit.NorthSouthOffset)
+                        backingConduit.coreSprite,
+                        ConduitShapeHelper.coreFromOffset(overrideOffset ?: backingConduit.northSouthOffset)
                     )
                 )
             } else {
                 // Add the cores
                 if (northSouthConnection) {
-                    cores.add(
+                    coreShapes.add(
                         CoreShape(
-                            backingConduit.CoreSprite,
-                            ConduitShapeHelper.coreFromOffset(overrideOffset ?: backingConduit.NorthSouthOffset)
+                            backingConduit.coreSprite,
+                            ConduitShapeHelper.coreFromOffset(overrideOffset ?: backingConduit.northSouthOffset)
                         )
                     )
                 }
                 if (eastWestConnection) {
-                    cores.add(
+                    coreShapes.add(
                         CoreShape(
-                            backingConduit.CoreSprite,
-                            ConduitShapeHelper.coreFromOffset(overrideOffset ?: backingConduit.EastWestOffset)
+                            backingConduit.coreSprite,
+                            ConduitShapeHelper.coreFromOffset(overrideOffset ?: backingConduit.eastWestOffset)
                         )
                     )
                 }
                 if (upDownConnection) {
-                    cores.add(
+                    coreShapes.add(
                         CoreShape(
-                            backingConduit.CoreSprite,
-                            ConduitShapeHelper.coreFromOffset(overrideOffset ?: backingConduit.UpDownOffset)
+                            backingConduit.coreSprite,
+                            ConduitShapeHelper.coreFromOffset(overrideOffset ?: backingConduit.upDownOffset)
                         )
                     )
                 }
@@ -231,7 +244,7 @@ class ConduitBundleBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity
         }
 
         // Now update the atomic, so the next render frame can see it
-        conduitShape.set(ConduitShape(cores, connections))
+        conduitShape.set(ConduitShape(coreShapes, connectionShapes))
     }
 
     fun getOutlineShape(): VoxelShape {
@@ -242,7 +255,7 @@ class ConduitBundleBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity
             val blockEntity = world!!.getBlockEntity(hit.blockPos)
             if (blockEntity is ConduitBundleBlockEntity) {
                 OmniConduitModBase.LOGGER.info("Hit ConduitBundleblockEntity")
-                
+
                 val shape = blockEntity.conduitShape.get()
 
                 // Fail safe
@@ -312,56 +325,6 @@ class ConduitBundleBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity
         return VoxelShapes.empty()
     }
 
-    fun getCollisionShape(): VoxelShape {
-        val shape = conduitShape.get()
-
-        // Fail-safe
-        if (shape.cores.isEmpty() && shape.connections.isEmpty()) {
-            return VoxelShapes.fullCube()
-        }
-
-        val voxels = ArrayList<VoxelShape>()
-        if (shape.cores.isNotEmpty()) {
-            voxels.add(VoxelShapes.cuboid(0.2, 0.2, 0.2, 0.8, 0.8, 0.8))
-        }
-
-        val directions = HashSet<Direction>()
-        for (connection in shape.connections) {
-            directions.add(connection.direction)
-        }
-        for (direction in directions) {
-            when (direction) {
-                Direction.DOWN -> {
-                    voxels.add(VoxelShapes.cuboid(0.25, 0.0, 0.25, 0.75, 0.2, 0.75))
-                }
-
-                Direction.UP -> {
-                    voxels.add(VoxelShapes.cuboid(0.25, 0.8, 0.25, 0.75, 1.0, 0.75))
-                }
-
-                Direction.NORTH -> {
-                    voxels.add(VoxelShapes.cuboid(0.25, 0.25, 0.0, 0.75, 0.75, 0.2))
-                }
-
-                Direction.SOUTH -> {
-                    voxels.add(VoxelShapes.cuboid(0.25, 0.25, 0.8, 0.75, 0.75, 1.0))
-                }
-
-                Direction.WEST -> {
-                    voxels.add(VoxelShapes.cuboid(0.0, 0.25, 0.25, 0.2, 0.75, 0.75))
-                }
-
-                Direction.EAST -> {
-                    voxels.add(VoxelShapes.cuboid(0.8, 0.25, 0.25, 1.0, 0.75, 0.75))
-                }
-            }
-        }
-
-        return voxels.stream()
-            .reduce { v1: VoxelShape?, v2: VoxelShape? -> VoxelShapes.combineAndSimplify(v1, v2, BooleanBiFunction.OR) }
-            .orElseGet { VoxelShapes.fullCube() }
-    }
-
     fun getRaycastShape(): VoxelShape {
         val shape = conduitShape.get()
 
@@ -387,5 +350,11 @@ class ConduitBundleBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity
         return voxels.stream()
             .reduce { v1: VoxelShape?, v2: VoxelShape? -> VoxelShapes.combineAndSimplify(v1, v2, BooleanBiFunction.OR) }
             .orElseGet { VoxelShapes.fullCube() }
+    }
+
+    fun neighborUpdate() {
+        for (conduitEntity in conduitEntities) {
+            conduitEntity.markConnectionsDirty()
+        }
     }
 }

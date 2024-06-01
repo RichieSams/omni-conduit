@@ -1,9 +1,12 @@
 package richiesams.omniconduit.api.conduits
 
+import net.minecraft.block.BlockState
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.nbt.NbtList
 import net.minecraft.util.Identifier
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
+import net.minecraft.world.World
 import richiesams.omniconduit.api.OnmiConduitRegistries
 import richiesams.omniconduit.blockentities.ConduitBundleBlockEntity
 
@@ -13,6 +16,9 @@ abstract class ConduitEntity protected constructor(
     protected val blockEntity: ConduitBundleBlockEntity
 ) {
     protected var connections = HashMap<Direction, ConduitConnection>()
+    protected var updateConnections: Boolean = true
+
+    abstract fun tick(world: World?, pos: BlockPos, state: BlockState): Boolean
 
     fun getBackingConduit(): Conduit {
         return conduit
@@ -51,7 +57,11 @@ abstract class ConduitEntity protected constructor(
     }
 
     fun markConnectionsDirty() {
-        //updateConnections = true
+        updateConnections = true
+    }
+
+    fun getConnections(): Map<Direction, ConduitConnection> {
+        return connections
     }
 
     companion object {
