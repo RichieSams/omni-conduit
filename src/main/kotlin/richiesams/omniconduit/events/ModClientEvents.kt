@@ -6,6 +6,8 @@ import net.minecraft.text.Text
 
 object ModClientEvents {
     fun registerModClientEvents() {
+        HudRenderCallback.EVENT.register(YetaWrenchOverlayRenderer::render)
+
         MouseEvents.MOUSE_WHEEL_SCROLLED.register { dx: Double, dy: Double ->
             val player = MinecraftClient.getInstance().player ?: return@register false
 

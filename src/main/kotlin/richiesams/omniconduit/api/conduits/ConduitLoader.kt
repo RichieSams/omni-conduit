@@ -23,7 +23,9 @@ object ConduitLoader {
             throw RuntimeException("Failed to read conduit resource file $location", e)
         }
 
-        return conduitFactory.create(jsonObject, conduitEntityFactory)
+        val conduit = conduitFactory.create(jsonObject, conduitEntityFactory)
+        ConduitDisplayMode.registerConduitDisplayMode(ConduitDisplayMode(conduit))
+        return conduit
     }
 
     fun interface Factory<T : Conduit?> {

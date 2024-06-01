@@ -4,5 +4,5 @@ import com.google.gson.JsonObject
 import richiesams.omniconduit.api.conduits.Conduit
 import richiesams.omniconduit.api.conduits.ConduitEntity
 
-class FluidConduit(jsonObject: JsonObject, factory: Factory<out ConduitEntity>) : Conduit(jsonObject, factory) {
+class FluidConduit(jsonObject: JsonObject, factory: Factory<out ConduitEntity>) : Conduit("fluid", jsonObject, factory) {
 }

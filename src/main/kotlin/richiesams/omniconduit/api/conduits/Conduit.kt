@@ -13,7 +13,7 @@ import richiesams.omniconduit.util.SerializationUtil
 import richiesams.omniconduit.util.SpriteReference
 
 
-open class Conduit(jsonObject: JsonObject, private val factory: Factory<out ConduitEntity>) {
+open class Conduit(val type: String, jsonObject: JsonObject, private val factory: Factory<out ConduitEntity>) {
     val eastWestOffset: ConduitOffset = SerializationUtil.GSON.fromJson(jsonObject["eastWestOffset"], ConduitOffset::class.java)
     val upDownOffset: ConduitOffset = SerializationUtil.GSON.fromJson(jsonObject["upDownOffset"], ConduitOffset::class.java)
     val northSouthOffset: ConduitOffset = SerializationUtil.GSON.fromJson(jsonObject["northSouthOffset"], ConduitOffset::class.java)
@@ -22,6 +22,7 @@ open class Conduit(jsonObject: JsonObject, private val factory: Factory<out Cond
     val connectorOuterSprite: SpriteReference
     val connectorInnerSprite: SpriteReference?
 
+    val icon: SpriteReference
 
     init {
         val core = jsonObject.getAsJsonObject("core") ?: throw JsonSyntaxException("Missing \"core\" section in conduit definition")
@@ -37,6 +38,10 @@ open class Conduit(jsonObject: JsonObject, private val factory: Factory<out Cond
         } else {
             this.connectorInnerSprite = SpriteReference.fromJSON(connectorInner)
         }
+
+        val icon = jsonObject.getAsJsonObject("icon") ?: throw JsonSyntaxException("Missing \"icon\" section in conduit definition")
+        this.icon = SpriteReference.fromJSON(icon)
+
     }
 
 
