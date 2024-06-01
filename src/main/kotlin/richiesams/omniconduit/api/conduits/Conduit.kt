@@ -14,28 +14,28 @@ import richiesams.omniconduit.util.SpriteReference
 
 
 open class Conduit(jsonObject: JsonObject, private val factory: Factory<out ConduitEntity>) {
-    val EastWestOffset: ConduitOffset = SerializationUtil.GSON.fromJson(jsonObject["eastWestOffset"], ConduitOffset::class.java)
-    val UpDownOffset: ConduitOffset = SerializationUtil.GSON.fromJson(jsonObject["upDownOffset"], ConduitOffset::class.java)
-    val NorthSouthOffset: ConduitOffset = SerializationUtil.GSON.fromJson(jsonObject["northSouthOffset"], ConduitOffset::class.java)
+    val eastWestOffset: ConduitOffset = SerializationUtil.GSON.fromJson(jsonObject["eastWestOffset"], ConduitOffset::class.java)
+    val upDownOffset: ConduitOffset = SerializationUtil.GSON.fromJson(jsonObject["upDownOffset"], ConduitOffset::class.java)
+    val northSouthOffset: ConduitOffset = SerializationUtil.GSON.fromJson(jsonObject["northSouthOffset"], ConduitOffset::class.java)
 
-    val CoreSprite: SpriteReference
-    val ConnectorOuterSprite: SpriteReference
-    var ConnectorInnerSprite: SpriteReference? = null
+    val coreSprite: SpriteReference
+    val connectorOuterSprite: SpriteReference
+    val connectorInnerSprite: SpriteReference?
 
 
     init {
         val core = jsonObject.getAsJsonObject("core") ?: throw JsonSyntaxException("Missing \"core\" section in conduit definition")
-        this.CoreSprite = SpriteReference.fromJSON(core)
+        this.coreSprite = SpriteReference.fromJSON(core)
 
         val connector = jsonObject.getAsJsonObject("connector") ?: throw JsonSyntaxException("Missing \"connector\" section in conduit definition")
         val connectorOuter = connector.getAsJsonObject("outer") ?: throw JsonSyntaxException("Missing \"connector::outer\" section in conduit definition")
-        this.ConnectorOuterSprite = SpriteReference.fromJSON(connectorOuter)
+        this.connectorOuterSprite = SpriteReference.fromJSON(connectorOuter)
         val connectorInner = connector.getAsJsonObject("inner")
         if (connectorInner == null) {
             // The inner sprite is optional
-            this.ConnectorInnerSprite = null
+            this.connectorInnerSprite = null
         } else {
-            this.ConnectorInnerSprite = SpriteReference.fromJSON(connectorInner)
+            this.connectorInnerSprite = SpriteReference.fromJSON(connectorInner)
         }
     }
 

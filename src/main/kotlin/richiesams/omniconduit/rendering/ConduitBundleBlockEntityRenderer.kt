@@ -11,6 +11,7 @@ import net.minecraft.client.render.block.entity.BlockEntityRenderer
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactory
 import net.minecraft.client.texture.Sprite
 import net.minecraft.client.util.math.MatrixStack
+import net.minecraft.item.Items
 import net.minecraft.screen.PlayerScreenHandler
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.Box
@@ -26,6 +27,7 @@ import richiesams.omniconduit.util.SpriteReference
 @Environment(EnvType.CLIENT)
 class ConduitBundleBlockEntityRenderer(ctx: BlockEntityRendererFactory.Context?) : BlockEntityRenderer<ConduitBundleBlockEntity> {
     private val sprites: HashMap<Identifier, Sprite> = HashMap<Identifier, Sprite>()
+    private val wireFrame: Sprite
     private val missingSprite: Sprite
 
     init {
@@ -33,22 +35,23 @@ class ConduitBundleBlockEntityRenderer(ctx: BlockEntityRendererFactory.Context?)
 
         // Fetch all the sprites
         for (entry in OnmiConduitRegistries.CONDUIT.entrySet) {
-            val coreID: Identifier = entry.value.CoreSprite.identifier
+            val coreID: Identifier = entry.value.coreSprite.identifier
             val coreSprite: Sprite = textureGetter.apply(coreID)
             sprites[coreID] = coreSprite
 
-            val connectorOuterID: Identifier = entry.value.ConnectorOuterSprite.identifier
+            val connectorOuterID: Identifier = entry.value.connectorOuterSprite.identifier
             val connectorOuterSprite: Sprite = textureGetter.apply(connectorOuterID)
             sprites[connectorOuterID] = connectorOuterSprite
 
-            if (entry.value.ConnectorInnerSprite != null) {
-                val connectorInnerID: Identifier = entry.value.ConnectorInnerSprite!!.identifier
+            if (entry.value.connectorInnerSprite != null) {
+                val connectorInnerID: Identifier = entry.value.connectorInnerSprite!!.identifier
                 val connectorInnerSprite: Sprite = textureGetter.apply(connectorInnerID)
                 sprites[connectorInnerID] = connectorInnerSprite
             }
         }
 
-        missingSprite = textureGetter.apply(Identifier(OmniConduitModBase.MOD_ID, "missing"))
+        wireFrame = textureGetter.apply(Identifier(OmniConduitModBase.MOD_ID, "block/conduit/wire_frame"))
+        missingSprite = textureGetter.apply(Identifier(OmniConduitModBase.MOD_ID, "intentionally_missing"))
     }
 
     enum class Rotation {
@@ -68,280 +71,299 @@ class ConduitBundleBlockEntityRenderer(ctx: BlockEntityRendererFactory.Context?)
         val entry: MatrixStack.Entry = matrices.peek()
         val positionMatrix: Matrix4f = entry.positionMatrix
 
-        // First render the cores
-        for (core in shape.cores) {
-            renderCuboid(vertexConsumer, sprites, positionMatrix, core.box, core.sprite)
-        }
-
-        // Then render the connectors
-        for (connection in shape.connections) {
-            // Render the inner texture first, if it exists
-            val connectorSpriteRefs: ArrayList<SpriteReference> = ArrayList<SpriteReference>()
-            if (connection.innerSprite != null) {
-                connectorSpriteRefs.add(connection.innerSprite!!)
+        val player = MinecraftClient.getInstance().player!!
+        val stack = player.getStackInHand(player.activeHand)
+        if (stack.isOf(Items.GRASS_BLOCK)) {
+            // Render all the faces
+            for (direction in Direction.entries) {
+                renderCuboidFace(
+                    vertexConsumer,
+                    positionMatrix,
+                    direction,
+                    Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0),
+                    wireFrame,
+                    Vec2f(0.0f, 0.0f),
+                    Vec2f(1.0f, 1.0f),
+                    Rotation.DEGREES_0
+                )
             }
-            connectorSpriteRefs.add(connection.outerSprite)
+        } else {
 
-            for (spriteRef in connectorSpriteRefs) {
-                val sprite: Sprite = sprites[spriteRef.identifier] ?: missingSprite
+            // First render the cores
+            for (core in shape.cores) {
+                renderCuboid(vertexConsumer, sprites, positionMatrix, core.box, core.sprite)
+            }
 
-                when (connection.direction) {
-                    Direction.UP -> {
-                        renderCuboidFace(
-                            vertexConsumer,
-                            positionMatrix,
-                            Direction.NORTH,
-                            connection.box,
-                            sprite,
-                            spriteRef.uvFrom,
-                            spriteRef.uvTo,
-                            Rotation.DEGREES_270
-                        )
-                        renderCuboidFace(
-                            vertexConsumer,
-                            positionMatrix,
-                            Direction.SOUTH,
-                            connection.box,
-                            sprite,
-                            spriteRef.uvFrom,
-                            spriteRef.uvTo,
-                            Rotation.DEGREES_270
-                        )
-                        renderCuboidFace(
-                            vertexConsumer,
-                            positionMatrix,
-                            Direction.EAST,
-                            connection.box,
-                            sprite,
-                            spriteRef.uvFrom,
-                            spriteRef.uvTo,
-                            Rotation.DEGREES_270
-                        )
-                        renderCuboidFace(
-                            vertexConsumer,
-                            positionMatrix,
-                            Direction.WEST,
-                            connection.box,
-                            sprite,
-                            spriteRef.uvFrom,
-                            spriteRef.uvTo,
-                            Rotation.DEGREES_270
-                        )
-                    }
+            // Then render the connectors
+            for (connection in shape.connections) {
+                // Render the inner texture first, if it exists
+                val connectorSpriteRefs: ArrayList<SpriteReference> = ArrayList<SpriteReference>()
+                if (connection.innerSprite != null) {
+                    connectorSpriteRefs.add(connection.innerSprite)
+                }
+                connectorSpriteRefs.add(connection.outerSprite)
 
-                    Direction.DOWN -> {
-                        renderCuboidFace(
-                            vertexConsumer,
-                            positionMatrix,
-                            Direction.NORTH,
-                            connection.box,
-                            sprite,
-                            spriteRef.uvFrom,
-                            spriteRef.uvTo,
-                            Rotation.DEGREES_90
-                        )
-                        renderCuboidFace(
-                            vertexConsumer,
-                            positionMatrix,
-                            Direction.SOUTH,
-                            connection.box,
-                            sprite,
-                            spriteRef.uvFrom,
-                            spriteRef.uvTo,
-                            Rotation.DEGREES_90
-                        )
-                        renderCuboidFace(
-                            vertexConsumer,
-                            positionMatrix,
-                            Direction.EAST,
-                            connection.box,
-                            sprite,
-                            spriteRef.uvFrom,
-                            spriteRef.uvTo,
-                            Rotation.DEGREES_90
-                        )
-                        renderCuboidFace(
-                            vertexConsumer,
-                            positionMatrix,
-                            Direction.WEST,
-                            connection.box,
-                            sprite,
-                            spriteRef.uvFrom,
-                            spriteRef.uvTo,
-                            Rotation.DEGREES_90
-                        )
-                    }
+                for (spriteRef in connectorSpriteRefs) {
+                    val sprite: Sprite = sprites[spriteRef.identifier] ?: missingSprite
 
-                    Direction.NORTH -> {
-                        renderCuboidFace(
-                            vertexConsumer,
-                            positionMatrix,
-                            Direction.EAST,
-                            connection.box,
-                            sprite,
-                            spriteRef.uvFrom,
-                            spriteRef.uvTo,
-                            Rotation.DEGREES_0
-                        )
-                        renderCuboidFace(
-                            vertexConsumer,
-                            positionMatrix,
-                            Direction.WEST,
-                            connection.box,
-                            sprite,
-                            spriteRef.uvFrom,
-                            spriteRef.uvTo,
-                            Rotation.DEGREES_180
-                        )
-                        renderCuboidFace(
-                            vertexConsumer,
-                            positionMatrix,
-                            Direction.UP,
-                            connection.box,
-                            sprite,
-                            spriteRef.uvFrom,
-                            spriteRef.uvTo,
-                            Rotation.DEGREES_90
-                        )
-                        renderCuboidFace(
-                            vertexConsumer,
-                            positionMatrix,
-                            Direction.DOWN,
-                            connection.box,
-                            sprite,
-                            spriteRef.uvFrom,
-                            spriteRef.uvTo,
-                            Rotation.DEGREES_270
-                        )
-                    }
+                    when (connection.direction) {
+                        Direction.UP -> {
+                            renderCuboidFace(
+                                vertexConsumer,
+                                positionMatrix,
+                                Direction.NORTH,
+                                connection.box,
+                                sprite,
+                                spriteRef.uvFrom,
+                                spriteRef.uvTo,
+                                Rotation.DEGREES_270
+                            )
+                            renderCuboidFace(
+                                vertexConsumer,
+                                positionMatrix,
+                                Direction.SOUTH,
+                                connection.box,
+                                sprite,
+                                spriteRef.uvFrom,
+                                spriteRef.uvTo,
+                                Rotation.DEGREES_270
+                            )
+                            renderCuboidFace(
+                                vertexConsumer,
+                                positionMatrix,
+                                Direction.EAST,
+                                connection.box,
+                                sprite,
+                                spriteRef.uvFrom,
+                                spriteRef.uvTo,
+                                Rotation.DEGREES_270
+                            )
+                            renderCuboidFace(
+                                vertexConsumer,
+                                positionMatrix,
+                                Direction.WEST,
+                                connection.box,
+                                sprite,
+                                spriteRef.uvFrom,
+                                spriteRef.uvTo,
+                                Rotation.DEGREES_270
+                            )
+                        }
 
-                    Direction.SOUTH -> {
-                        renderCuboidFace(
-                            vertexConsumer,
-                            positionMatrix,
-                            Direction.EAST,
-                            connection.box,
-                            sprite,
-                            spriteRef.uvFrom,
-                            spriteRef.uvTo,
-                            Rotation.DEGREES_180
-                        )
-                        renderCuboidFace(
-                            vertexConsumer,
-                            positionMatrix,
-                            Direction.WEST,
-                            connection.box,
-                            sprite,
-                            spriteRef.uvFrom,
-                            spriteRef.uvTo,
-                            Rotation.DEGREES_0
-                        )
-                        renderCuboidFace(
-                            vertexConsumer,
-                            positionMatrix,
-                            Direction.UP,
-                            connection.box,
-                            sprite,
-                            spriteRef.uvFrom,
-                            spriteRef.uvTo,
-                            Rotation.DEGREES_270
-                        )
-                        renderCuboidFace(
-                            vertexConsumer,
-                            positionMatrix,
-                            Direction.DOWN,
-                            connection.box,
-                            sprite,
-                            spriteRef.uvFrom,
-                            spriteRef.uvTo,
-                            Rotation.DEGREES_90
-                        )
-                    }
+                        Direction.DOWN -> {
+                            renderCuboidFace(
+                                vertexConsumer,
+                                positionMatrix,
+                                Direction.NORTH,
+                                connection.box,
+                                sprite,
+                                spriteRef.uvFrom,
+                                spriteRef.uvTo,
+                                Rotation.DEGREES_90
+                            )
+                            renderCuboidFace(
+                                vertexConsumer,
+                                positionMatrix,
+                                Direction.SOUTH,
+                                connection.box,
+                                sprite,
+                                spriteRef.uvFrom,
+                                spriteRef.uvTo,
+                                Rotation.DEGREES_90
+                            )
+                            renderCuboidFace(
+                                vertexConsumer,
+                                positionMatrix,
+                                Direction.EAST,
+                                connection.box,
+                                sprite,
+                                spriteRef.uvFrom,
+                                spriteRef.uvTo,
+                                Rotation.DEGREES_90
+                            )
+                            renderCuboidFace(
+                                vertexConsumer,
+                                positionMatrix,
+                                Direction.WEST,
+                                connection.box,
+                                sprite,
+                                spriteRef.uvFrom,
+                                spriteRef.uvTo,
+                                Rotation.DEGREES_90
+                            )
+                        }
 
-                    Direction.EAST -> {
-                        renderCuboidFace(
-                            vertexConsumer,
-                            positionMatrix,
-                            Direction.NORTH,
-                            connection.box,
-                            sprite,
-                            spriteRef.uvFrom,
-                            spriteRef.uvTo,
-                            Rotation.DEGREES_180
-                        )
-                        renderCuboidFace(
-                            vertexConsumer,
-                            positionMatrix,
-                            Direction.SOUTH,
-                            connection.box,
-                            sprite,
-                            spriteRef.uvFrom,
-                            spriteRef.uvTo,
-                            Rotation.DEGREES_0
-                        )
-                        renderCuboidFace(
-                            vertexConsumer,
-                            positionMatrix,
-                            Direction.UP,
-                            connection.box,
-                            sprite,
-                            spriteRef.uvFrom,
-                            spriteRef.uvTo,
-                            Rotation.DEGREES_180
-                        )
-                        renderCuboidFace(
-                            vertexConsumer,
-                            positionMatrix,
-                            Direction.DOWN,
-                            connection.box,
-                            sprite,
-                            spriteRef.uvFrom,
-                            spriteRef.uvTo,
-                            Rotation.DEGREES_0
-                        )
-                    }
+                        Direction.NORTH -> {
+                            renderCuboidFace(
+                                vertexConsumer,
+                                positionMatrix,
+                                Direction.EAST,
+                                connection.box,
+                                sprite,
+                                spriteRef.uvFrom,
+                                spriteRef.uvTo,
+                                Rotation.DEGREES_0
+                            )
+                            renderCuboidFace(
+                                vertexConsumer,
+                                positionMatrix,
+                                Direction.WEST,
+                                connection.box,
+                                sprite,
+                                spriteRef.uvFrom,
+                                spriteRef.uvTo,
+                                Rotation.DEGREES_180
+                            )
+                            renderCuboidFace(
+                                vertexConsumer,
+                                positionMatrix,
+                                Direction.UP,
+                                connection.box,
+                                sprite,
+                                spriteRef.uvFrom,
+                                spriteRef.uvTo,
+                                Rotation.DEGREES_90
+                            )
+                            renderCuboidFace(
+                                vertexConsumer,
+                                positionMatrix,
+                                Direction.DOWN,
+                                connection.box,
+                                sprite,
+                                spriteRef.uvFrom,
+                                spriteRef.uvTo,
+                                Rotation.DEGREES_270
+                            )
+                        }
 
-                    Direction.WEST -> {
-                        renderCuboidFace(
-                            vertexConsumer,
-                            positionMatrix,
-                            Direction.NORTH,
-                            connection.box,
-                            sprite,
-                            spriteRef.uvFrom,
-                            spriteRef.uvTo,
-                            Rotation.DEGREES_0
-                        )
-                        renderCuboidFace(
-                            vertexConsumer,
-                            positionMatrix,
-                            Direction.SOUTH,
-                            connection.box,
-                            sprite,
-                            spriteRef.uvFrom,
-                            spriteRef.uvTo,
-                            Rotation.DEGREES_180
-                        )
-                        renderCuboidFace(
-                            vertexConsumer,
-                            positionMatrix,
-                            Direction.UP,
-                            connection.box,
-                            sprite,
-                            spriteRef.uvFrom,
-                            spriteRef.uvTo,
-                            Rotation.DEGREES_0
-                        )
-                        renderCuboidFace(
-                            vertexConsumer,
-                            positionMatrix,
-                            Direction.DOWN,
-                            connection.box,
-                            sprite,
-                            spriteRef.uvFrom,
-                            spriteRef.uvTo,
-                            Rotation.DEGREES_180
-                        )
+                        Direction.SOUTH -> {
+                            renderCuboidFace(
+                                vertexConsumer,
+                                positionMatrix,
+                                Direction.EAST,
+                                connection.box,
+                                sprite,
+                                spriteRef.uvFrom,
+                                spriteRef.uvTo,
+                                Rotation.DEGREES_180
+                            )
+                            renderCuboidFace(
+                                vertexConsumer,
+                                positionMatrix,
+                                Direction.WEST,
+                                connection.box,
+                                sprite,
+                                spriteRef.uvFrom,
+                                spriteRef.uvTo,
+                                Rotation.DEGREES_0
+                            )
+                            renderCuboidFace(
+                                vertexConsumer,
+                                positionMatrix,
+                                Direction.UP,
+                                connection.box,
+                                sprite,
+                                spriteRef.uvFrom,
+                                spriteRef.uvTo,
+                                Rotation.DEGREES_270
+                            )
+                            renderCuboidFace(
+                                vertexConsumer,
+                                positionMatrix,
+                                Direction.DOWN,
+                                connection.box,
+                                sprite,
+                                spriteRef.uvFrom,
+                                spriteRef.uvTo,
+                                Rotation.DEGREES_90
+                            )
+                        }
+
+                        Direction.EAST -> {
+                            renderCuboidFace(
+                                vertexConsumer,
+                                positionMatrix,
+                                Direction.NORTH,
+                                connection.box,
+                                sprite,
+                                spriteRef.uvFrom,
+                                spriteRef.uvTo,
+                                Rotation.DEGREES_180
+                            )
+                            renderCuboidFace(
+                                vertexConsumer,
+                                positionMatrix,
+                                Direction.SOUTH,
+                                connection.box,
+                                sprite,
+                                spriteRef.uvFrom,
+                                spriteRef.uvTo,
+                                Rotation.DEGREES_0
+                            )
+                            renderCuboidFace(
+                                vertexConsumer,
+                                positionMatrix,
+                                Direction.UP,
+                                connection.box,
+                                sprite,
+                                spriteRef.uvFrom,
+                                spriteRef.uvTo,
+                                Rotation.DEGREES_180
+                            )
+                            renderCuboidFace(
+                                vertexConsumer,
+                                positionMatrix,
+                                Direction.DOWN,
+                                connection.box,
+                                sprite,
+                                spriteRef.uvFrom,
+                                spriteRef.uvTo,
+                                Rotation.DEGREES_0
+                            )
+                        }
+
+                        Direction.WEST -> {
+                            renderCuboidFace(
+                                vertexConsumer,
+                                positionMatrix,
+                                Direction.NORTH,
+                                connection.box,
+                                sprite,
+                                spriteRef.uvFrom,
+                                spriteRef.uvTo,
+                                Rotation.DEGREES_0
+                            )
+                            renderCuboidFace(
+                                vertexConsumer,
+                                positionMatrix,
+                                Direction.SOUTH,
+                                connection.box,
+                                sprite,
+                                spriteRef.uvFrom,
+                                spriteRef.uvTo,
+                                Rotation.DEGREES_180
+                            )
+                            renderCuboidFace(
+                                vertexConsumer,
+                                positionMatrix,
+                                Direction.UP,
+                                connection.box,
+                                sprite,
+                                spriteRef.uvFrom,
+                                spriteRef.uvTo,
+                                Rotation.DEGREES_0
+                            )
+                            renderCuboidFace(
+                                vertexConsumer,
+                                positionMatrix,
+                                Direction.DOWN,
+                                connection.box,
+                                sprite,
+                                spriteRef.uvFrom,
+                                spriteRef.uvTo,
+                                Rotation.DEGREES_180
+                            )
+                        }
                     }
                 }
             }
