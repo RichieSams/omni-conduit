@@ -17,6 +17,7 @@ import richiesams.omniconduit.blockentities.ModBlockEntities
 import richiesams.omniconduit.blocks.ModBlocks
 import richiesams.omniconduit.conduits.ModConduits
 import richiesams.omniconduit.events.ModEvents
+import richiesams.omniconduit.items.ModDataComponentTypes
 import richiesams.omniconduit.items.ModItems
 
 object OmniConduitModBase : ModInitializer {
@@ -32,10 +33,11 @@ object OmniConduitModBase : ModInitializer {
         // Proceed with mild caution.
         LOGGER.info("Initializing OmniConduit mod")
 
-        ModBlocks.registerBlocks();
-        ModBlockEntities.registerBlockEntities();
-        ModConduits.registerConduits();
-        ModItems.registerItems();
+        ModBlocks.registerBlocks()
+        ModBlockEntities.registerBlockEntities()
+        ModConduits.registerConduits()
+        ModDataComponentTypes.registerDataComponentTypes()
+        ModItems.registerItems()
 
         // Register the item group now that everything is loaded
         Registry.register(Registries.ITEM_GROUP, BASE_ITEM_GROUP, FabricItemGroup.builder()
@@ -49,6 +51,7 @@ object OmniConduitModBase : ModInitializer {
     }
 
     private fun addItemGroupEntries(entries: ItemGroup.Entries) {
+        entries.add(ModItems.YETA_WRENCH)
         entries.add(ModItems.ITEM_CONDUIT)
         entries.add(ModItems.BASIC_ENERGY_CONDUIT)
         entries.add(ModItems.BASIC_FLUID_CONDUIT)
