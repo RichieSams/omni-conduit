@@ -1,0 +1,26 @@
+name: Merge
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup SVU
+        id: svu
+        uses: obfu5c8/action-svu@v1.0.0
+        with:
+          svu-version: 1.12.0
+      - name: Create git tag
+        run: git tag ${{ steps.svu.outputs.version }}
+      - name: Push tag to origin
+        run: git push origin ${{ steps.svu.outputs.version }}
