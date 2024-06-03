@@ -1,0 +1,54 @@
+name: Build
+
+on:
+  workflow_call:
+    outputs:
+      version:
+        description: The version of the built APK
+        value: ${{ jobs.build.outputs.version }}
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup SVU
+        id: svu
+        uses: obfu5c8/action-svu@v1.0.0
+        with:
+          strip-prefix: true
+          svu-version: 1.12.0
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: microsoft
+      - name: Bump version in fabric.mod.json
+        uses: restackio/update-json-file-action@2.1
+        with:
+          file: src/main/resources/fabric.mod.json
+          fields: '{"version": "${{ steps.svu.outputs.version }}"}'
+      - name: Bump version in gradle.properties
+        run: sed -i -e 's/mod_version=0.0.0/mod_version=${{ steps.svu.outputs.version }}/g' gradle.properties
+      - name: Cache Gradle dir
+        uses: actions/cache@v4
+        with:
+          path: .gradle
+          key: gradle-cache
+      - name: Build
+        run: sh ./gradlew build
+      - name: Capture main jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: omniconduit-${{ steps.svu.outputs.version }}.jar
+          path: build/libs/omniconduit-${{ steps.svu.outputs.version }}.jar
+      - name: Capture sources jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: omniconduit-${{ steps.svu.outputs.version }}-sources.jar
+          path: build/libs/omniconduit-${{ steps.svu.outputs.version }}-sources.jar
+    outputs:
+      version: ${{ steps.svu.outputs.version }}

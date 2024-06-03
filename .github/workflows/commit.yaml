@@ -1,0 +1,10 @@
+name: Commit Testing
+
+on:
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yaml

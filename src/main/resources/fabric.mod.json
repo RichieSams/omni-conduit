@@ -1,17 +1,16 @@
 {
   "schemaVersion": 1,
   "id": "omniconduit",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "name": "Omni Conduit",
   "description": "A mod that adds conduits that can share the same space in a single block. No more spaghetti!",
   "authors": [
     "RichieSams"
   ],
   "contact": {
-    "homepage": "https://fabricmc.net/",
-    "sources": "https://github.com/FabricMC/fabric-example-mod"
+    "sources": "https://github.com/RichieSams/omni-conduit"
   },
-  "license": "CC0-1.0",
+  "license": "Apache 2.0",
   "icon": "assets/omniconduit/icon.png",
   "environment": "*",
   "entrypoints": {
@@ -47,5 +46,5 @@
     "fabric-api": "*",
     "fabric-language-kotlin": ">=1.11.0+kotlin.2.0.0"
   },
-  "suggests": { }
+  "suggests": {}
 }

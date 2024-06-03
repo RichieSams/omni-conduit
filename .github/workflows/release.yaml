@@ -1,0 +1,40 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yaml
+  release:
+    runs-on: ubuntu-22.04
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Download main jar
+        uses: actions/download-artifact@v4
+        with:
+          name: omniconduit-${{ needs.build.outputs.version }}.jar
+      - name: Download sources jar
+        uses: actions/download-artifact@v4
+        with:
+          name: omniconduit-${{ needs.build.outputs.version }}-sources.jar
+      - name: Generate changelog
+        id: git-cliff
+        uses: orhun/git-cliff-action@v3.0.2
+        with:
+          args: --latest --strip all
+      - name: Create a GitHub release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: v${{ needs.build.outputs.version }}
+          name: Release v${{ needs.build.outputs.version }}
+          body: ${{ steps.git-cliff.outputs.content }}
+          artifacts: "omniconduit-${{ needs.build.outputs.version }}.jar,omniconduit-${{ needs.build.outputs.version }}-sources.jar"
