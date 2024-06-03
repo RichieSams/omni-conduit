@@ -6,7 +6,8 @@ import richiesams.omniconduit.util.SpriteReference
 
 class ConduitShape(
     val cores: List<CoreShape>,
-    val connections: List<ConnectionShape>
+    val connections: List<ConnectionShape>,
+    val outlines: List<Box>,
 ) {
 }
 

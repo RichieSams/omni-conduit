@@ -12,15 +12,26 @@ object ConduitShapeHelper {
     private const val CONNECTOR_WIDTH = CORE_WIDTH * 0.7
     private const val CONNECTOR_HALF_WIDTH = CONNECTOR_WIDTH / 2.0
 
+    private const val OUTLINE_WIDTH = 3.25 / 16.0
+    private const val OUTLINE_HALF_WIDTH = OUTLINE_WIDTH / 2.0
+
     // We use large replacement values for zero and one
     // So we can clamp them to "real" zero / one after offset
     private const val CONNECTOR_ZERO = -50.0
     private const val CONNECTOR_ONE = 50.0
 
     fun coreFromOffset(offset: ConduitOffset): Box {
+        return coreXFromOffset(CORE_HALF_WIDTH, offset)
+    }
+
+    fun coreOutlineFromOffset(offset: ConduitOffset): Box {
+        return coreXFromOffset(OUTLINE_HALF_WIDTH, offset)
+    }
+
+    private fun coreXFromOffset(halfWidth: Double, offset: ConduitOffset): Box {
         var cuboid = Box(
-            0.5 - CORE_HALF_WIDTH, 0.5 - CORE_HALF_WIDTH, 0.5 - CORE_HALF_WIDTH,
-            0.5 + CORE_HALF_WIDTH, 0.5 + CORE_HALF_WIDTH, 0.5 + CORE_HALF_WIDTH,
+            0.5 - halfWidth, 0.5 - halfWidth, 0.5 - halfWidth,
+            0.5 + halfWidth, 0.5 + halfWidth, 0.5 + halfWidth,
         )
 
         when (offset) {
@@ -105,46 +116,54 @@ object ConduitShapeHelper {
     }
 
     fun connectorFromOffset(offset: ConduitOffset, connectionDirection: Direction): Box {
+        return connectorXFromOffset(CONNECTOR_HALF_WIDTH, offset, connectionDirection)
+    }
+
+    fun connectorOutlineFromOffset(offset: ConduitOffset, connectionDirection: Direction): Box {
+        return connectorXFromOffset(OUTLINE_HALF_WIDTH, offset, connectionDirection)
+    }
+
+    private fun connectorXFromOffset(halfWidth: Double, offset: ConduitOffset, connectionDirection: Direction): Box {
         var connectorCuboid = when (connectionDirection) {
             Direction.DOWN -> {
                 Box(
-                    0.5 - CONNECTOR_HALF_WIDTH, CONNECTOR_ZERO, 0.5 - CONNECTOR_HALF_WIDTH,
-                    0.5 + CONNECTOR_HALF_WIDTH, 0.5 - CORE_HALF_WIDTH, 0.5 + CONNECTOR_HALF_WIDTH
+                    0.5 - halfWidth, CONNECTOR_ZERO, 0.5 - halfWidth,
+                    0.5 + halfWidth, 0.5 - CORE_HALF_WIDTH, 0.5 + halfWidth
                 )
             }
 
             Direction.UP -> {
                 Box(
-                    0.5 - CONNECTOR_HALF_WIDTH, 0.5 + CORE_HALF_WIDTH, 0.5 - CONNECTOR_HALF_WIDTH,
-                    0.5 + CONNECTOR_HALF_WIDTH, CONNECTOR_ONE, 0.5 + CONNECTOR_HALF_WIDTH
+                    0.5 - halfWidth, 0.5 + CORE_HALF_WIDTH, 0.5 - halfWidth,
+                    0.5 + halfWidth, CONNECTOR_ONE, 0.5 + halfWidth
                 )
             }
 
             Direction.NORTH -> {
                 Box(
-                    0.5 - CONNECTOR_HALF_WIDTH, 0.5 - CONNECTOR_HALF_WIDTH, CONNECTOR_ZERO,
-                    0.5 + CONNECTOR_HALF_WIDTH, 0.5 + CONNECTOR_HALF_WIDTH, 0.5 - CORE_HALF_WIDTH
+                    0.5 - halfWidth, 0.5 - halfWidth, CONNECTOR_ZERO,
+                    0.5 + halfWidth, 0.5 + halfWidth, 0.5 - CORE_HALF_WIDTH
                 )
             }
 
             Direction.SOUTH -> {
                 Box(
-                    0.5 - CONNECTOR_HALF_WIDTH, 0.5 - CONNECTOR_HALF_WIDTH, 0.5 + CORE_HALF_WIDTH,
-                    0.5 + CONNECTOR_HALF_WIDTH, 0.5 + CONNECTOR_HALF_WIDTH, CONNECTOR_ONE
+                    0.5 - halfWidth, 0.5 - halfWidth, 0.5 + CORE_HALF_WIDTH,
+                    0.5 + halfWidth, 0.5 + halfWidth, CONNECTOR_ONE
                 )
             }
 
             Direction.WEST -> {
                 Box(
-                    CONNECTOR_ZERO, 0.5 - CONNECTOR_HALF_WIDTH, 0.5 - CONNECTOR_HALF_WIDTH,
-                    0.5 - CORE_HALF_WIDTH, 0.5 + CONNECTOR_HALF_WIDTH, 0.5 + CONNECTOR_HALF_WIDTH
+                    CONNECTOR_ZERO, 0.5 - halfWidth, 0.5 - halfWidth,
+                    0.5 - CORE_HALF_WIDTH, 0.5 + halfWidth, 0.5 + halfWidth
                 )
             }
 
             Direction.EAST -> {
                 Box(
-                    0.5 + CORE_HALF_WIDTH, 0.5 - CONNECTOR_HALF_WIDTH, 0.5 - CONNECTOR_HALF_WIDTH,
-                    CONNECTOR_ONE, 0.5 + CONNECTOR_HALF_WIDTH, 0.5 + CONNECTOR_HALF_WIDTH
+                    0.5 + CORE_HALF_WIDTH, 0.5 - halfWidth, 0.5 - halfWidth,
+                    CONNECTOR_ONE, 0.5 + halfWidth, 0.5 + halfWidth
                 )
             }
         }

@@ -42,7 +42,7 @@ class ConduitBundleBlock(settings: Settings?) : BlockWithEntity(settings), Block
     override fun getOutlineShape(state: BlockState?, world: BlockView, pos: BlockPos?, context: ShapeContext?): VoxelShape {
         val blockEntity: BlockEntity? = world.getBlockEntity(pos)
         if (blockEntity is ConduitBundleBlockEntity) {
-            return blockEntity.getRaycastShape()
+            return blockEntity.getOutlineShape()
         }
 
         return super.getOutlineShape(state, world, pos, context)
