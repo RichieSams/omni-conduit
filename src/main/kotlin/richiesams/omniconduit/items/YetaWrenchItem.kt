@@ -53,9 +53,9 @@ class YetaWrenchItem(settings: Settings?) : Item(settings) {
             return stackInHand
         }
 
-        fun getCurrentMode(stack: ItemStack): String {
+        fun getCurrentMode(stack: ItemStack?): String {
             // If the user isn't holding a yeta wrench, default to ALL
-            if (stack.item != ModItems.YETA_WRENCH) {
+            if (stack == null || stack.item != ModItems.YETA_WRENCH) {
                 return ConduitDisplayMode.ALL.type
             }
 

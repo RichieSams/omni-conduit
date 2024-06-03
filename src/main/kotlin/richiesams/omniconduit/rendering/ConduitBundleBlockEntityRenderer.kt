@@ -11,7 +11,6 @@ import net.minecraft.client.render.block.entity.BlockEntityRenderer
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactory
 import net.minecraft.client.texture.Sprite
 import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.item.Items
 import net.minecraft.screen.PlayerScreenHandler
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.Box
@@ -21,13 +20,18 @@ import net.minecraft.util.math.Vec3d
 import org.joml.Matrix4f
 import richiesams.omniconduit.OmniConduitModBase
 import richiesams.omniconduit.api.OnmiConduitRegistries
+import richiesams.omniconduit.api.conduits.ConduitDisplayMode
 import richiesams.omniconduit.blockentities.ConduitBundleBlockEntity
+import richiesams.omniconduit.items.YetaWrenchItem
 import richiesams.omniconduit.util.SpriteReference
 
 @Environment(EnvType.CLIENT)
 class ConduitBundleBlockEntityRenderer(ctx: BlockEntityRendererFactory.Context?) : BlockEntityRenderer<ConduitBundleBlockEntity> {
-    private val sprites: HashMap<Identifier, Sprite> = HashMap<Identifier, Sprite>()
-    private val wireFrame: Sprite
+    companion object {
+        private val wireFrame: SpriteReference = SpriteReference(Identifier(OmniConduitModBase.MOD_ID, "block/conduit/wire_frame"), Vec2f(0.0f, 0.0f), Vec2f(1.0f, 1.0f))
+    }
+
+    private val sprites: HashMap<Identifier, Sprite> = HashMap()
     private val missingSprite: Sprite
 
     init {
@@ -50,16 +54,19 @@ class ConduitBundleBlockEntityRenderer(ctx: BlockEntityRendererFactory.Context?)
             }
         }
 
-        wireFrame = textureGetter.apply(Identifier(OmniConduitModBase.MOD_ID, "block/conduit/wire_frame"))
+        // Fetch all our misc sprites
+        sprites[wireFrame.identifier] = textureGetter.apply(wireFrame.identifier)
         missingSprite = textureGetter.apply(Identifier(OmniConduitModBase.MOD_ID, "intentionally_missing"))
     }
 
-    enum class Rotation {
+    private enum class Rotation {
         DEGREES_0,
         DEGREES_90,
         DEGREES_180,
         DEGREES_270
     }
+
+    private class WireFrameCuboidFace(val direction: Direction, val cube: Box, val uvRotation: Rotation) {}
 
     override fun render(entity: ConduitBundleBlockEntity, tickDelta: Float, matrices: MatrixStack, vertexConsumers: VertexConsumerProvider, light: Int, overlay: Int) {
         val shape = entity.getConduitShape()
@@ -71,31 +78,68 @@ class ConduitBundleBlockEntityRenderer(ctx: BlockEntityRendererFactory.Context?)
         val entry: MatrixStack.Entry = matrices.peek()
         val positionMatrix: Matrix4f = entry.positionMatrix
 
-        val player = MinecraftClient.getInstance().player!!
-        val stack = player.getStackInHand(player.activeHand)
-        if (stack.isOf(Items.GRASS_BLOCK)) {
-            // Render all the faces
-            for (direction in Direction.entries) {
-                renderCuboidFace(
-                    vertexConsumer,
-                    positionMatrix,
-                    direction,
-                    Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0),
-                    wireFrame,
-                    Vec2f(0.0f, 0.0f),
-                    Vec2f(1.0f, 1.0f),
-                    Rotation.DEGREES_0
-                )
-            }
-        } else {
+        val mode = YetaWrenchItem.getCurrentMode(YetaWrenchItem.getEquippedWrench())
 
-            // First render the cores
-            for (core in shape.cores) {
-                renderCuboid(vertexConsumer, sprites, positionMatrix, core.box, core.sprite)
+        val wireFrameFaces = ArrayList<WireFrameCuboidFace>()
+
+        // First render the cores
+        for (core in shape.cores) {
+            val solid: Boolean = when (mode) {
+                // ALL and CONFIGURE will always display normally
+                ConduitDisplayMode.ALL.type -> true
+                ConduitDisplayMode.CONFIGURE.type -> true
+                // NONE will always display wireframe
+                ConduitDisplayMode.NONE.type -> false
+                // If we match the mode then we display normally
+                core.type -> true
+                // If not, then we display wireframe
+                else -> false
             }
 
-            // Then render the connectors
-            for (connection in shape.connections) {
+            if (solid) {
+                // Render all the faces
+                for (direction in Direction.entries) {
+                    renderCuboidFace(
+                        vertexConsumer,
+                        positionMatrix,
+                        direction,
+                        core.box,
+                        sprites[core.sprite.identifier] ?: missingSprite,
+                        core.sprite.uvFrom,
+                        core.sprite.uvTo,
+                        Rotation.DEGREES_0
+                    )
+                }
+            } else {
+                for (direction in Direction.entries) {
+                    // Save the wireframe faces to render later.
+                    // To give transparency the best chance
+                    wireFrameFaces.add(
+                        WireFrameCuboidFace(
+                            direction,
+                            core.box,
+                            Rotation.DEGREES_0
+                        )
+                    )
+                }
+            }
+        }
+
+        // Then render the connectors
+        for (connection in shape.connections) {
+            val solid: Boolean = when (mode) {
+                // ALL and CONFIGURE will always display normally
+                ConduitDisplayMode.ALL.type -> true
+                ConduitDisplayMode.CONFIGURE.type -> true
+                // NONE will always display wireframe
+                ConduitDisplayMode.NONE.type -> false
+                // If we match the mode then we display normally
+                connection.type -> true
+                // If not, then we display wireframe
+                else -> false
+            }
+
+            if (solid) {
                 // Render the inner texture first, if it exists
                 val connectorSpriteRefs: ArrayList<SpriteReference> = ArrayList<SpriteReference>()
                 if (connection.innerSprite != null) {
@@ -104,7 +148,7 @@ class ConduitBundleBlockEntityRenderer(ctx: BlockEntityRendererFactory.Context?)
                 connectorSpriteRefs.add(connection.outerSprite)
 
                 for (spriteRef in connectorSpriteRefs) {
-                    val sprite: Sprite = sprites[spriteRef.identifier] ?: missingSprite
+                    val sprite = sprites[spriteRef.identifier] ?: missingSprite
 
                     when (connection.direction) {
                         Direction.UP -> {
@@ -366,31 +410,207 @@ class ConduitBundleBlockEntityRenderer(ctx: BlockEntityRendererFactory.Context?)
                         }
                     }
                 }
+            } else {
+                val sprite = sprites[wireFrame.identifier] ?: missingSprite
+
+                when (connection.direction) {
+                    Direction.UP -> {
+                        wireFrameFaces.add(
+                            WireFrameCuboidFace(
+                                Direction.NORTH,
+                                connection.box,
+                                Rotation.DEGREES_270
+                            )
+                        )
+                        wireFrameFaces.add(
+                            WireFrameCuboidFace(
+                                Direction.SOUTH,
+                                connection.box,
+                                Rotation.DEGREES_270
+                            )
+                        )
+                        wireFrameFaces.add(
+                            WireFrameCuboidFace(
+                                Direction.EAST,
+                                connection.box,
+                                Rotation.DEGREES_270
+                            )
+                        )
+                        wireFrameFaces.add(
+                            WireFrameCuboidFace(
+                                Direction.WEST,
+                                connection.box,
+                                Rotation.DEGREES_270
+                            )
+                        )
+                    }
+
+                    Direction.DOWN -> {
+                        wireFrameFaces.add(
+                            WireFrameCuboidFace(
+                                Direction.NORTH,
+                                connection.box,
+                                Rotation.DEGREES_90
+                            )
+                        )
+                        wireFrameFaces.add(
+                            WireFrameCuboidFace(
+                                Direction.SOUTH,
+                                connection.box,
+                                Rotation.DEGREES_90
+                            )
+                        )
+                        wireFrameFaces.add(
+                            WireFrameCuboidFace(
+                                Direction.EAST,
+                                connection.box,
+                                Rotation.DEGREES_90
+                            )
+                        )
+                        wireFrameFaces.add(
+                            WireFrameCuboidFace(
+                                Direction.WEST,
+                                connection.box,
+                                Rotation.DEGREES_90
+                            )
+                        )
+                    }
+
+                    Direction.NORTH -> {
+                        wireFrameFaces.add(
+                            WireFrameCuboidFace(
+                                Direction.EAST,
+                                connection.box,
+                                Rotation.DEGREES_0
+                            )
+                        )
+                        wireFrameFaces.add(
+                            WireFrameCuboidFace(
+                                Direction.WEST,
+                                connection.box,
+                                Rotation.DEGREES_180
+                            )
+                        )
+                        wireFrameFaces.add(
+                            WireFrameCuboidFace(
+                                Direction.UP,
+                                connection.box,
+                                Rotation.DEGREES_90
+                            )
+                        )
+                        wireFrameFaces.add(
+                            WireFrameCuboidFace(
+                                Direction.DOWN,
+                                connection.box,
+                                Rotation.DEGREES_270
+                            )
+                        )
+                    }
+
+                    Direction.SOUTH -> {
+                        wireFrameFaces.add(
+                            WireFrameCuboidFace(
+                                Direction.EAST,
+                                connection.box,
+                                Rotation.DEGREES_180
+                            )
+                        )
+                        wireFrameFaces.add(
+                            WireFrameCuboidFace(
+                                Direction.WEST,
+                                connection.box,
+                                Rotation.DEGREES_0
+                            )
+                        )
+                        wireFrameFaces.add(
+                            WireFrameCuboidFace(
+                                Direction.UP,
+                                connection.box,
+                                Rotation.DEGREES_270
+                            )
+                        )
+                        wireFrameFaces.add(
+                            WireFrameCuboidFace(
+                                Direction.DOWN,
+                                connection.box,
+                                Rotation.DEGREES_90
+                            )
+                        )
+                    }
+
+                    Direction.EAST -> {
+                        wireFrameFaces.add(
+                            WireFrameCuboidFace(
+                                Direction.NORTH,
+                                connection.box,
+                                Rotation.DEGREES_180
+                            )
+                        )
+                        wireFrameFaces.add(
+                            WireFrameCuboidFace(
+                                Direction.SOUTH,
+                                connection.box,
+                                Rotation.DEGREES_0
+                            )
+                        )
+                        wireFrameFaces.add(
+                            WireFrameCuboidFace(
+                                Direction.UP,
+                                connection.box,
+                                Rotation.DEGREES_180
+                            )
+                        )
+                        wireFrameFaces.add(
+                            WireFrameCuboidFace(
+                                Direction.DOWN,
+                                connection.box,
+                                Rotation.DEGREES_0
+                            )
+                        )
+                    }
+
+                    Direction.WEST -> {
+                        wireFrameFaces.add(
+                            WireFrameCuboidFace(
+                                Direction.NORTH,
+                                connection.box,
+                                Rotation.DEGREES_0
+                            )
+                        )
+                        wireFrameFaces.add(
+                            WireFrameCuboidFace(
+                                Direction.SOUTH,
+                                connection.box,
+                                Rotation.DEGREES_180
+                            )
+                        )
+                        wireFrameFaces.add(
+                            WireFrameCuboidFace(
+                                Direction.UP,
+                                connection.box,
+                                Rotation.DEGREES_0
+                            )
+                        )
+                        wireFrameFaces.add(
+                            WireFrameCuboidFace(
+                                Direction.DOWN,
+                                connection.box,
+                                Rotation.DEGREES_180
+                            )
+                        )
+                    }
+                }
             }
+        }
+
+        // Now we render all the wireframe faces
+        val sprite = sprites[wireFrame.identifier] ?: missingSprite
+        for (face in wireFrameFaces) {
+            renderCuboidFace(vertexConsumer, positionMatrix, face.direction, face.cube, sprite, wireFrame.uvFrom, wireFrame.uvTo, face.uvRotation)
         }
 
         matrices.pop()
     }
-
-
-    private fun renderCuboid(vertexConsumer: VertexConsumer, spriteMap: Map<Identifier, Sprite>, positionMatrix: Matrix4f, cube: Box, spriteRef: SpriteReference) {
-        val sprite: Sprite = spriteMap[spriteRef.identifier] ?: missingSprite
-
-        // Render all the faces
-        for (direction in Direction.entries) {
-            renderCuboidFace(
-                vertexConsumer,
-                positionMatrix,
-                direction,
-                cube,
-                sprite,
-                spriteRef.uvFrom,
-                spriteRef.uvTo,
-                Rotation.DEGREES_0
-            )
-        }
-    }
-
 
     private fun renderCuboidFace(vertexConsumer: VertexConsumer, positionMatrix: Matrix4f, direction: Direction, cube: Box, sprite: Sprite, uvFrom: Vec2f, uvTo: Vec2f, uvRotation: Rotation) {
         when (direction) {

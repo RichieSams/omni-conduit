@@ -11,11 +11,13 @@ class ConduitShape(
 }
 
 class CoreShape(
+    val type: String,
     val sprite: SpriteReference,
-    val box: Box
+    val box: Box,
 )
 
 class ConnectionShape(
+    val type: String,
     val outerSprite: SpriteReference,
     val innerSprite: SpriteReference?,
     val box: Box,
