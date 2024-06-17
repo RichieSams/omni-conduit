@@ -14,23 +14,16 @@ import richiesams.omniconduit.api.conduits.ConduitEntity
 
 
 class RedstoneConduitEntity(conduit: Conduit, blockEntity: ConduitBundleBlockEntity) : ConduitEntity(conduit, blockEntity) {
-    private val adjacentConduitBundles: Array<BlockApiCache<ConduitBundleBlockEntity, Unit>?>
+    private val adjacentConduitBundles: Array<BlockApiCache<ConduitBundleBlockEntity, Unit>?> = arrayOfNulls(6)
 
-    init {
-        val world = blockEntity.world
-        if (world is ServerWorld) {
-            val pos = blockEntity.pos
-            adjacentConduitBundles = arrayOf(
-                BlockApiCache.create(BlockApiLookups.CONDUIT_BUNDLE, world, pos.offset(Direction.DOWN)),
-                BlockApiCache.create(BlockApiLookups.CONDUIT_BUNDLE, world, pos.offset(Direction.UP)),
-                BlockApiCache.create(BlockApiLookups.CONDUIT_BUNDLE, world, pos.offset(Direction.NORTH)),
-                BlockApiCache.create(BlockApiLookups.CONDUIT_BUNDLE, world, pos.offset(Direction.SOUTH)),
-                BlockApiCache.create(BlockApiLookups.CONDUIT_BUNDLE, world, pos.offset(Direction.WEST)),
-                BlockApiCache.create(BlockApiLookups.CONDUIT_BUNDLE, world, pos.offset(Direction.EAST)),
-            )
-        } else {
-            adjacentConduitBundles = arrayOfNulls(6)
+    private fun getAdjacentConduitBundle(direction: Direction): ConduitBundleBlockEntity? {
+        var cache = adjacentConduitBundles[direction.id]
+        if (cache == null) {
+            cache = BlockApiCache.create(BlockApiLookups.CONDUIT_BUNDLE, blockEntity.world as ServerWorld, blockEntity.pos.offset(direction))
+            adjacentConduitBundles[direction.id] = cache
         }
+
+        return cache!!.find(null)
     }
 
     override fun tick(world: ServerWorld, pos: BlockPos, state: BlockState): Boolean {
@@ -40,7 +33,7 @@ class RedstoneConduitEntity(conduit: Conduit, blockEntity: ConduitBundleBlockEnt
             for (direction in Direction.entries) {
                 // TODO: We'll need to use fabric API calls to actually check if the other entity contains a conduit
                 //       that we can connect to. Or a block that we can connect to
-                val otherConduitBundle = adjacentConduitBundles[direction.id]!!.find(null)
+                val otherConduitBundle = getAdjacentConduitBundle(direction)
                 if (otherConduitBundle != null) {
                     if (otherConduitBundle.hasConduitOfType(conduit.javaClass)) {
                         if (otherConduitBundle.conduitCount() == 1) {
