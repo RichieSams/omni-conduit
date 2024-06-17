@@ -13,7 +13,8 @@ import net.minecraft.registry.RegistryKeys
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import org.slf4j.LoggerFactory
-import richiesams.omniconduit.blockentities.ModBlockEntities
+import richiesams.omniconduit.api.BlockApiLookups
+import richiesams.omniconduit.api.blockentities.OmniConduitBlockEntities
 import richiesams.omniconduit.blocks.ModBlocks
 import richiesams.omniconduit.conduits.ModConduits
 import richiesams.omniconduit.events.ModEvents
@@ -34,10 +35,11 @@ object OmniConduitModBase : ModInitializer {
         LOGGER.info("Initializing OmniConduit mod")
 
         ModBlocks.registerBlocks()
-        ModBlockEntities.registerBlockEntities()
+        OmniConduitBlockEntities.registerBlockEntities()
         ModConduits.registerConduits()
         ModDataComponentTypes.registerDataComponentTypes()
         ModItems.registerItems()
+        BlockApiLookups.registerAPIs()
 
         // Register the item group now that everything is loaded
         Registry.register(Registries.ITEM_GROUP, BASE_ITEM_GROUP, FabricItemGroup.builder()

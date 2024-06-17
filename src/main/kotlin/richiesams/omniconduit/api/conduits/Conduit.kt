@@ -8,7 +8,7 @@ import net.minecraft.item.Items
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 import richiesams.omniconduit.api.OnmiConduitRegistries
-import richiesams.omniconduit.blockentities.ConduitBundleBlockEntity
+import richiesams.omniconduit.api.blockentities.ConduitBundleBlockEntity
 import richiesams.omniconduit.util.SerializationUtil
 import richiesams.omniconduit.util.SpriteReference
 
