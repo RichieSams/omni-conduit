@@ -4,6 +4,8 @@ import net.minecraft.item.Item
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemUsageContext
 import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.sound.SoundCategory
+import net.minecraft.sound.SoundEvents
 import net.minecraft.util.ActionResult
 import richiesams.omniconduit.api.blockentities.ConduitBundleBlockEntity
 import richiesams.omniconduit.api.conduits.Conduit
@@ -26,6 +28,7 @@ class ConduitItem(val conduit: Conduit, settings: Settings?) : Item(settings) {
             // See if we can add a conduit
             if (blockEntity.canAddConduit(conduit)) {
                 blockEntity.addConduit(player as ServerPlayerEntity, hand)
+                world.playSound(null, pos, SoundEvents.BLOCK_STONE_PLACE, SoundCategory.BLOCKS, 1f, 1f)
                 return ActionResult.SUCCESS
             }
         }
@@ -39,6 +42,7 @@ class ConduitItem(val conduit: Conduit, settings: Settings?) : Item(settings) {
             // See if we can add a conduit
             if (blockEntity.canAddConduit(conduit)) {
                 blockEntity.addConduit(player as ServerPlayerEntity, hand)
+                world.playSound(null, pos, SoundEvents.BLOCK_STONE_PLACE, SoundCategory.BLOCKS, 1f, 1f)
                 return ActionResult.SUCCESS
             }
         }
@@ -53,6 +57,7 @@ class ConduitItem(val conduit: Conduit, settings: Settings?) : Item(settings) {
             }
 
             blockEntity.addConduit(player as ServerPlayerEntity, hand)
+            world.playSound(null, pos, SoundEvents.BLOCK_STONE_PLACE, SoundCategory.BLOCKS, 1f, 1f)
             return ActionResult.SUCCESS
         }
 
