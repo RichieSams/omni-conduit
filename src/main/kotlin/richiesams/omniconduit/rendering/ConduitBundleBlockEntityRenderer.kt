@@ -20,8 +20,8 @@ import net.minecraft.util.math.Vec3d
 import org.joml.Matrix4f
 import richiesams.omniconduit.OmniConduitModBase
 import richiesams.omniconduit.api.OnmiConduitRegistries
+import richiesams.omniconduit.api.blockentities.ConduitBundleBlockEntity
 import richiesams.omniconduit.api.conduits.ConduitDisplayMode
-import richiesams.omniconduit.blockentities.ConduitBundleBlockEntity
 import richiesams.omniconduit.items.YetaWrenchItem
 import richiesams.omniconduit.util.SpriteReference
 

@@ -1,4 +1,4 @@
-package richiesams.omniconduit.blockentities
+package richiesams.omniconduit.api.blockentities
 
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.registry.Registries
@@ -8,7 +8,7 @@ import richiesams.omniconduit.OmniConduitModBase
 import richiesams.omniconduit.blocks.ModBlocks
 
 
-object ModBlockEntities {
+object OmniConduitBlockEntities {
     val CONDUIT_BUNDLE: BlockEntityType<ConduitBundleBlockEntity> =
         BlockEntityType.Builder.create(::ConduitBundleBlockEntity, ModBlocks.CONDUIT_BUNDLE).build()
 

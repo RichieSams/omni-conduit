@@ -5,8 +5,8 @@ import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemUsageContext
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.util.ActionResult
+import richiesams.omniconduit.api.blockentities.ConduitBundleBlockEntity
 import richiesams.omniconduit.api.conduits.Conduit
-import richiesams.omniconduit.blockentities.ConduitBundleBlockEntity
 import richiesams.omniconduit.blocks.ModBlocks
 
 class ConduitItem(val conduit: Conduit, settings: Settings?) : Item(settings) {

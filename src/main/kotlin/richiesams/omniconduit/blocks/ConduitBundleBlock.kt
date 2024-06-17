@@ -10,8 +10,8 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.shape.VoxelShape
 import net.minecraft.world.BlockView
 import net.minecraft.world.World
-import richiesams.omniconduit.blockentities.ConduitBundleBlockEntity
-import richiesams.omniconduit.blockentities.ModBlockEntities
+import richiesams.omniconduit.api.blockentities.ConduitBundleBlockEntity
+import richiesams.omniconduit.api.blockentities.OmniConduitBlockEntities
 
 
 class ConduitBundleBlock(settings: Settings?) : BlockWithEntity(settings), BlockEntityProvider {
@@ -20,7 +20,7 @@ class ConduitBundleBlock(settings: Settings?) : BlockWithEntity(settings), Block
     }
 
     override fun <T : BlockEntity> getTicker(world: World?, state: BlockState?, type: BlockEntityType<T>?): BlockEntityTicker<T>? {
-        return validateTicker(type, ModBlockEntities.CONDUIT_BUNDLE, ConduitBundleBlockEntity::tick)
+        return validateTicker(type, OmniConduitBlockEntities.CONDUIT_BUNDLE, ConduitBundleBlockEntity::tick)
     }
 
     override fun getRenderType(state: BlockState): BlockRenderType {

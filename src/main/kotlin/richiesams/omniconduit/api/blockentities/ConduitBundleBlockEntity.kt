@@ -1,4 +1,4 @@
-package richiesams.omniconduit.blockentities
+package richiesams.omniconduit.api.blockentities
 
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
@@ -11,6 +11,7 @@ import net.minecraft.network.packet.Packet
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket
 import net.minecraft.registry.RegistryWrapper
 import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.Hand
 import net.minecraft.util.ItemScatterer
 import net.minecraft.util.collection.DefaultedList
@@ -27,13 +28,13 @@ import richiesams.omniconduit.items.ConduitItem
 import java.util.concurrent.atomic.AtomicReference
 
 
-class ConduitBundleBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity(ModBlockEntities.CONDUIT_BUNDLE, pos, state) {
+class ConduitBundleBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity(OmniConduitBlockEntities.CONDUIT_BUNDLE, pos, state) {
     companion object {
         private const val coreHitboxExpansion: Double = 0.25 / 16.0
         private const val connectionHitboxExpansion: Double = 0.75 / 16.0
 
         fun tick(world: World, pos: BlockPos, state: BlockState, entity: ConduitBundleBlockEntity) {
-            if (world.isClient) {
+            if (world.isClient || world !is ServerWorld) {
                 return
             }
 
@@ -108,10 +109,25 @@ class ConduitBundleBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity
             // Add it
             conduitEntities.add(conduit.createConduitEntity(this))
             markDirty()
+
             return true
         }
 
         return false
+    }
+
+    fun <T> hasConduitOfType(clazz: Class<T>): Boolean where T : Conduit {
+        for (entity in conduitEntities) {
+            if (entity.getBackingConduit().javaClass == clazz) {
+                return true
+            }
+        }
+
+        return false
+    }
+
+    fun conduitCount(): Int {
+        return conduitEntities.size
     }
 
     override fun readNbt(nbt: NbtCompound, registryLookup: RegistryWrapper.WrapperLookup) {
@@ -171,27 +187,41 @@ class ConduitBundleBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity
 
             // We only want to add a single core for each offset type
             // So we track which are connected to
-            var northSouthConnection = false
-            var eastWestConnection = false
-            var upDownConnection = false
+            var northSouthCore = false
+            var eastWestCore = false
+            var upDownCore = false
+            var noneCore = false
 
             val connections = conduitEntity.getConnections()
-            for (entry in connections) {
+            for ((direction, connection) in connections) {
                 var offset: ConduitOffset
-                when (entry.key) {
-                    Direction.NORTH, Direction.SOUTH -> {
-                        offset = overrideOffset ?: backingConduit.northSouthOffset
-                        northSouthConnection = true
+                when (connection.type) {
+                    ConduitConnectionType.CONDUIT -> {
+                        when (direction) {
+                            Direction.NORTH, Direction.SOUTH -> {
+                                offset = overrideOffset ?: backingConduit.northSouthOffset
+                                northSouthCore = true
+                            }
+
+                            Direction.EAST, Direction.WEST -> {
+                                offset = overrideOffset ?: backingConduit.eastWestOffset
+                                eastWestCore = true
+                            }
+
+                            Direction.UP, Direction.DOWN -> {
+                                offset = overrideOffset ?: backingConduit.upDownOffset
+                                upDownCore = true
+                            }
+                        }
                     }
 
-                    Direction.EAST, Direction.WEST -> {
-                        offset = overrideOffset ?: backingConduit.eastWestOffset
-                        eastWestConnection = true
+                    ConduitConnectionType.CONDUIT_SINGLE -> {
+                        offset = ConduitOffset.NONE
+                        noneCore = true
                     }
 
-                    Direction.UP, Direction.DOWN -> {
-                        offset = overrideOffset ?: backingConduit.upDownOffset
-                        upDownConnection = true
+                    ConduitConnectionType.TERMINATION -> {
+                        TODO()
                     }
                 }
 
@@ -200,15 +230,15 @@ class ConduitBundleBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity
                         backingConduit.type,
                         backingConduit.connectorOuterSprite,
                         backingConduit.connectorInnerSprite,
-                        ConduitShapeHelper.connectorFromOffset(offset, entry.key),
-                        entry.key
+                        ConduitShapeHelper.connectorFromOffset(offset, direction),
+                        direction
                     )
                 )
 
-                val outline = ConduitShapeHelper.connectorOutlineFromOffset(offset, entry.key)
-                val existingOutline = connectorOutlines.getOrDefault(entry.key, outline)
+                val outline = ConduitShapeHelper.connectorOutlineFromOffset(offset, direction)
+                val existingOutline = connectorOutlines.getOrDefault(direction, outline)
 
-                connectorOutlines[entry.key] = outline.union(existingOutline)
+                connectorOutlines[direction] = outline.union(existingOutline)
             }
 
             // If there aren't any connections, then add a core at NorthSouth offset
@@ -221,14 +251,15 @@ class ConduitBundleBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity
                         ConduitShapeHelper.coreFromOffset(offset)
                     )
                 )
-                if (coreOutline == null) {
-                    coreOutline = ConduitShapeHelper.coreOutlineFromOffset(offset)
-                } else {
-                    coreOutline = coreOutline.union(ConduitShapeHelper.coreOutlineFromOffset(offset))
-                }
+                coreOutline =
+                    if (coreOutline == null) {
+                        ConduitShapeHelper.coreOutlineFromOffset(offset)
+                    } else {
+                        coreOutline.union(ConduitShapeHelper.coreOutlineFromOffset(offset))
+                    }
             } else {
                 // Add the cores
-                if (northSouthConnection) {
+                if (northSouthCore) {
                     val offset = overrideOffset ?: backingConduit.northSouthOffset
                     coreShapes.add(
                         CoreShape(
@@ -237,13 +268,14 @@ class ConduitBundleBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity
                             ConduitShapeHelper.coreFromOffset(offset)
                         )
                     )
-                    if (coreOutline == null) {
-                        coreOutline = ConduitShapeHelper.coreOutlineFromOffset(offset)
-                    } else {
-                        coreOutline = coreOutline.union(ConduitShapeHelper.coreOutlineFromOffset(offset))
-                    }
+                    coreOutline =
+                        if (coreOutline == null) {
+                            ConduitShapeHelper.coreOutlineFromOffset(offset)
+                        } else {
+                            coreOutline.union(ConduitShapeHelper.coreOutlineFromOffset(offset))
+                        }
                 }
-                if (eastWestConnection) {
+                if (eastWestCore) {
                     val offset = overrideOffset ?: backingConduit.eastWestOffset
                     coreShapes.add(
                         CoreShape(
@@ -252,13 +284,14 @@ class ConduitBundleBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity
                             ConduitShapeHelper.coreFromOffset(offset)
                         )
                     )
-                    if (coreOutline == null) {
-                        coreOutline = ConduitShapeHelper.coreOutlineFromOffset(offset)
-                    } else {
-                        coreOutline = coreOutline.union(ConduitShapeHelper.coreOutlineFromOffset(offset))
-                    }
+                    coreOutline =
+                        if (coreOutline == null) {
+                            ConduitShapeHelper.coreOutlineFromOffset(offset)
+                        } else {
+                            coreOutline.union(ConduitShapeHelper.coreOutlineFromOffset(offset))
+                        }
                 }
-                if (upDownConnection) {
+                if (upDownCore) {
                     val offset = overrideOffset ?: backingConduit.upDownOffset
                     coreShapes.add(
                         CoreShape(
@@ -267,11 +300,27 @@ class ConduitBundleBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity
                             ConduitShapeHelper.coreFromOffset(offset)
                         )
                     )
-                    if (coreOutline == null) {
-                        coreOutline = ConduitShapeHelper.coreOutlineFromOffset(offset)
-                    } else {
-                        coreOutline = coreOutline.union(ConduitShapeHelper.coreOutlineFromOffset(offset))
-                    }
+                    coreOutline =
+                        if (coreOutline == null) {
+                            ConduitShapeHelper.coreOutlineFromOffset(offset)
+                        } else {
+                            coreOutline.union(ConduitShapeHelper.coreOutlineFromOffset(offset))
+                        }
+                }
+                if (noneCore) {
+                    coreShapes.add(
+                        CoreShape(
+                            backingConduit.type,
+                            backingConduit.coreSprite,
+                            ConduitShapeHelper.coreFromOffset(ConduitOffset.NONE)
+                        )
+                    )
+                    coreOutline =
+                        if (coreOutline == null) {
+                            ConduitShapeHelper.coreOutlineFromOffset(ConduitOffset.NONE)
+                        } else {
+                            coreOutline.union(ConduitShapeHelper.coreOutlineFromOffset(ConduitOffset.NONE))
+                        }
                 }
             }
         }

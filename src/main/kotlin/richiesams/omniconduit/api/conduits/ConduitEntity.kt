@@ -3,12 +3,12 @@ package richiesams.omniconduit.api.conduits
 import net.minecraft.block.BlockState
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.nbt.NbtList
+import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
-import net.minecraft.world.World
 import richiesams.omniconduit.api.OnmiConduitRegistries
-import richiesams.omniconduit.blockentities.ConduitBundleBlockEntity
+import richiesams.omniconduit.api.blockentities.ConduitBundleBlockEntity
 
 
 abstract class ConduitEntity protected constructor(
@@ -18,7 +18,7 @@ abstract class ConduitEntity protected constructor(
     protected var connections = HashMap<Direction, ConduitConnection>()
     protected var updateConnections: Boolean = true
 
-    abstract fun tick(world: World?, pos: BlockPos, state: BlockState): Boolean
+    abstract fun tick(world: ServerWorld, pos: BlockPos, state: BlockState): Boolean
 
     fun getBackingConduit(): Conduit {
         return conduit
@@ -31,11 +31,11 @@ abstract class ConduitEntity protected constructor(
             val connection = connectionsList.getCompound(i)
             val direction: Direction =
                 Direction.byName(connection.getString("Direction")) ?: throw RuntimeException("Invalid direction value")
-            val terminated = connection.getBoolean("Terminated")
+            val connectionType = ConduitConnectionType.valueOf(connection.getString("Type"))
             val input = connection.getBoolean("Input")
             val output = connection.getBoolean("Output")
 
-            newConnections[direction] = ConduitConnection(terminated, input, output)
+            newConnections[direction] = ConduitConnection(connectionType, input, output)
         }
 
         this.connections = newConnections
@@ -47,7 +47,7 @@ abstract class ConduitEntity protected constructor(
         for (entry in connections.entries) {
             val connection = NbtCompound()
             connection.putString("Direction", entry.key.toString())
-            connection.putBoolean("Terminated", entry.value.terminated)
+            connection.putString("Type", entry.value.type.toString())
             connection.putBoolean("Input", entry.value.input)
             connection.putBoolean("Output", entry.value.output)
 
