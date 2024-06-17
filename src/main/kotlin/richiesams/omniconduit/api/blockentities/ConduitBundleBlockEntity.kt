@@ -100,6 +100,7 @@ class ConduitBundleBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity
 
                     markDirty()
                     conduitEntity.markConnectionsDirty()
+                    world!!.updateNeighborsAlways(pos, cachedState.block)
 
                     return true
                 }
@@ -108,7 +109,9 @@ class ConduitBundleBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity
             // Conduit doesn't already exist
             // Add it
             conduitEntities.add(conduit.createConduitEntity(this))
+
             markDirty()
+            world!!.updateNeighborsAlways(pos, cachedState.block)
 
             return true
         }
