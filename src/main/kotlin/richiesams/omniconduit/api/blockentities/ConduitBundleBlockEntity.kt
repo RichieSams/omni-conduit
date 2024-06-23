@@ -180,6 +180,8 @@ class ConduitBundleBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity
         var coreOutline: Box? = null
         val connectorOutlines = HashMap<Direction, Box>()
 
+        val coreCovers = ArrayList<Box>()
+
         var overrideOffset: ConduitOffset? = null
         if (conduitEntities.size == 1) {
             overrideOffset = ConduitOffset.NONE
@@ -251,87 +253,95 @@ class ConduitBundleBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity
                     CoreShape(
                         backingConduit.type,
                         backingConduit.coreSprite,
-                        ConduitShapeHelper.coreFromOffset(offset)
+                        ConduitShapeHelper.coreFromOffset(offset),
+                        false
                     )
                 )
-                coreOutline =
-                    if (coreOutline == null) {
-                        ConduitShapeHelper.coreOutlineFromOffset(offset)
-                    } else {
-                        coreOutline.union(ConduitShapeHelper.coreOutlineFromOffset(offset))
-                    }
+                val newOutline = ConduitShapeHelper.coreOutlineFromOffset(offset)
+                coreOutline = if (coreOutline == null) newOutline else coreOutline.union(newOutline)
             } else {
                 // Add the cores
+                val cores = HashSet<CoreShape>()
+
                 if (northSouthCore) {
                     val offset = overrideOffset ?: backingConduit.northSouthOffset
-                    coreShapes.add(
+                    cores.add(
                         CoreShape(
                             backingConduit.type,
                             backingConduit.coreSprite,
-                            ConduitShapeHelper.coreFromOffset(offset)
+                            ConduitShapeHelper.coreFromOffset(offset),
+                            false
                         )
                     )
-                    coreOutline =
-                        if (coreOutline == null) {
-                            ConduitShapeHelper.coreOutlineFromOffset(offset)
-                        } else {
-                            coreOutline.union(ConduitShapeHelper.coreOutlineFromOffset(offset))
-                        }
+                    val newOutline = ConduitShapeHelper.coreOutlineFromOffset(offset)
+                    coreOutline = if (coreOutline == null) newOutline else coreOutline.union(newOutline)
                 }
                 if (eastWestCore) {
                     val offset = overrideOffset ?: backingConduit.eastWestOffset
-                    coreShapes.add(
+                    cores.add(
                         CoreShape(
                             backingConduit.type,
                             backingConduit.coreSprite,
-                            ConduitShapeHelper.coreFromOffset(offset)
+                            ConduitShapeHelper.coreFromOffset(offset),
+                            false
                         )
                     )
-                    coreOutline =
-                        if (coreOutline == null) {
-                            ConduitShapeHelper.coreOutlineFromOffset(offset)
-                        } else {
-                            coreOutline.union(ConduitShapeHelper.coreOutlineFromOffset(offset))
-                        }
+                    val newOutline = ConduitShapeHelper.coreOutlineFromOffset(offset)
+                    coreOutline = if (coreOutline == null) newOutline else coreOutline.union(newOutline)
                 }
                 if (upDownCore) {
                     val offset = overrideOffset ?: backingConduit.upDownOffset
-                    coreShapes.add(
+                    cores.add(
                         CoreShape(
                             backingConduit.type,
                             backingConduit.coreSprite,
-                            ConduitShapeHelper.coreFromOffset(offset)
+                            ConduitShapeHelper.coreFromOffset(offset),
+                            false
                         )
                     )
-                    coreOutline =
-                        if (coreOutline == null) {
-                            ConduitShapeHelper.coreOutlineFromOffset(offset)
-                        } else {
-                            coreOutline.union(ConduitShapeHelper.coreOutlineFromOffset(offset))
-                        }
+                    val newOutline = ConduitShapeHelper.coreOutlineFromOffset(offset)
+                    coreOutline = if (coreOutline == null) newOutline else coreOutline.union(newOutline)
                 }
                 if (noneCore) {
-                    coreShapes.add(
+                    cores.add(
                         CoreShape(
                             backingConduit.type,
                             backingConduit.coreSprite,
-                            ConduitShapeHelper.coreFromOffset(ConduitOffset.NONE)
+                            ConduitShapeHelper.coreFromOffset(ConduitOffset.NONE),
+                            false
                         )
                     )
-                    coreOutline =
-                        if (coreOutline == null) {
-                            ConduitShapeHelper.coreOutlineFromOffset(ConduitOffset.NONE)
-                        } else {
-                            coreOutline.union(ConduitShapeHelper.coreOutlineFromOffset(ConduitOffset.NONE))
-                        }
+                    val newOutline = ConduitShapeHelper.coreOutlineFromOffset(ConduitOffset.NONE)
+                    coreOutline = if (coreOutline == null) newOutline else coreOutline.union(newOutline)
                 }
+
+                // If there are multiple cores per type, then we use covers
+                if (cores.size > 1) {
+                    var cover: Box? = null
+
+                    for (core in cores) {
+                        cover = if (cover == null) core.box else cover.union(core.box)
+                        core.hiddenByCover = true
+                    }
+
+                    coreCovers.add(cover!!)
+                }
+
+                coreShapes.addAll(cores)
             }
         }
 
-        val outlines: List<Box> = connectorOutlines.values + listOf(coreOutline!!)
+        // TODO: Merge any intersecting `coreCover` entries
+
+
+        val newShape = ConduitShape(
+            coreShapes.toList(),
+            connectionShapes,
+            connectorOutlines.values + listOf(coreOutline!!),
+        )
 
         // Now update the atomic, so the next render frame can see it
-        conduitShape.set(ConduitShape(coreShapes.toList(), connectionShapes, outlines))
+        conduitShape.set(newShape)
     }
 
     fun getOutlineShape(): VoxelShape {

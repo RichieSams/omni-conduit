@@ -8,13 +8,13 @@ class ConduitShape(
     val cores: List<CoreShape>,
     val connections: List<ConnectionShape>,
     val outlines: List<Box>,
-) {
-}
+)
 
 class CoreShape(
     val type: String,
     val sprite: SpriteReference,
     val box: Box,
+    var hiddenByCover: Boolean
 )
 
 class ConnectionShape(
