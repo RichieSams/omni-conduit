@@ -7,10 +7,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import richiesams.omniconduit.api.BlockApiLookups
 import richiesams.omniconduit.api.blockentities.ConduitBundleBlockEntity
-import richiesams.omniconduit.api.conduits.Conduit
-import richiesams.omniconduit.api.conduits.ConduitConnection
-import richiesams.omniconduit.api.conduits.ConduitConnectionType
-import richiesams.omniconduit.api.conduits.ConduitEntity
+import richiesams.omniconduit.api.conduits.*
 
 
 class RedstoneConduitEntity(conduit: Conduit, blockEntity: ConduitBundleBlockEntity) : ConduitEntity(conduit, blockEntity) {
@@ -37,9 +34,9 @@ class RedstoneConduitEntity(conduit: Conduit, blockEntity: ConduitBundleBlockEnt
                 if (otherConduitBundle != null) {
                     if (otherConduitBundle.hasConduitOfType(conduit.javaClass)) {
                         if (otherConduitBundle.conduitCount() == 1) {
-                            connections[direction] = ConduitConnection(ConduitConnectionType.CONDUIT_SINGLE, input = false, output = false)
+                            connections[direction] = ConduitConnection(ConduitConnectionType.SINGLE_CONDUIT, ConduitTerminationMode.NONE)
                         } else {
-                            connections[direction] = ConduitConnection(ConduitConnectionType.CONDUIT, input = false, output = false)
+                            connections[direction] = ConduitConnection(ConduitConnectionType.MULTI_CONDUIT, ConduitTerminationMode.NONE)
                         }
 
                         markDirty = true

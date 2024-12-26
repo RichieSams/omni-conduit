@@ -2,12 +2,18 @@ package richiesams.omniconduit.api.conduits
 
 data class ConduitConnection(
     val type: ConduitConnectionType,
-    val input: Boolean,
-    val output: Boolean
+    val terminationMode: ConduitTerminationMode
 )
 
 enum class ConduitConnectionType {
-    CONDUIT,
-    CONDUIT_SINGLE,
+    SINGLE_CONDUIT,
+    MULTI_CONDUIT,
     TERMINATION,
+}
+
+enum class ConduitTerminationMode {
+    NONE,
+    INPUT_OUTPUT,
+    INPUT_ONLY,
+    OUTPUT_ONLY
 }

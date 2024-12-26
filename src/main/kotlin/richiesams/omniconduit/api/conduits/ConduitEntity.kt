@@ -32,10 +32,9 @@ abstract class ConduitEntity protected constructor(
             val direction: Direction =
                 Direction.byName(connection.getString("Direction")) ?: throw RuntimeException("Invalid direction value")
             val connectionType = ConduitConnectionType.valueOf(connection.getString("Type"))
-            val input = connection.getBoolean("Input")
-            val output = connection.getBoolean("Output")
+            val terminationMode = ConduitTerminationMode.valueOf(connection.getString("TerminationMode"))
 
-            newConnections[direction] = ConduitConnection(connectionType, input, output)
+            newConnections[direction] = ConduitConnection(connectionType, terminationMode)
         }
 
         this.connections = newConnections
@@ -48,8 +47,7 @@ abstract class ConduitEntity protected constructor(
             val connection = NbtCompound()
             connection.putString("Direction", entry.key.toString())
             connection.putString("Type", entry.value.type.toString())
-            connection.putBoolean("Input", entry.value.input)
-            connection.putBoolean("Output", entry.value.output)
+            connection.putString("TerminationMode", entry.value.terminationMode.toString())
 
             connectionsList.add(connection)
         }
