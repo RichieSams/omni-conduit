@@ -69,7 +69,7 @@ class ConduitBundleBlockEntityRenderer(ctx: BlockEntityRendererFactory.Context?)
     private class WireFrameCuboidFace(val direction: Direction, val cube: Box, val uvRotation: Rotation) {}
 
     override fun render(entity: ConduitBundleBlockEntity, tickDelta: Float, matrices: MatrixStack, vertexConsumers: VertexConsumerProvider, light: Int, overlay: Int) {
-        val shape = entity.getConduitShape()
+        val shape = entity.getRenderShape()
 
         matrices.push()
 

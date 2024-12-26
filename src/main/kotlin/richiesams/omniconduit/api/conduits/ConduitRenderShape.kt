@@ -4,12 +4,10 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 import richiesams.omniconduit.util.SpriteReference
 
-class ConduitShape(
+class ConduitRenderShape(
     val cores: List<CoreShape>,
     val connections: List<ConnectionShape>,
-    val outlines: List<Box>,
-) {
-}
+)
 
 class CoreShape(
     val type: String,

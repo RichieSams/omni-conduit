@@ -3,7 +3,8 @@
   "package": "richiesams.omniconduit.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "MouseMixin"
+    "MouseMixin",
+    "WorldRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1
