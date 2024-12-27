@@ -1,8 +1,12 @@
 package richiesams.omniconduit.api.conduits
 
+import net.minecraft.util.DyeColor
+
 data class ConduitConnection(
     val type: ConduitConnectionType,
-    val terminationMode: ConduitTerminationMode
+    val terminationMode: ConduitTerminationMode,
+    val terminationInputChannel: DyeColor,
+    val terminationOutputChannel: DyeColor,
 )
 
 enum class ConduitConnectionType {

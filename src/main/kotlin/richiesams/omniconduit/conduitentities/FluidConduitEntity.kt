@@ -3,6 +3,7 @@ package richiesams.omniconduit.conduitentities
 import net.fabricmc.fabric.api.lookup.v1.block.BlockApiCache
 import net.minecraft.block.BlockState
 import net.minecraft.server.world.ServerWorld
+import net.minecraft.util.DyeColor
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import richiesams.omniconduit.api.BlockApiLookups
@@ -33,9 +34,9 @@ class FluidConduitEntity(conduit: Conduit, blockEntity: ConduitBundleBlockEntity
                 if (otherConduitBundle != null) {
                     if (otherConduitBundle.hasConduitOfType(conduit.javaClass)) {
                         if (otherConduitBundle.conduitCount() == 1) {
-                            connections[direction] = ConduitConnection(ConduitConnectionType.SINGLE_CONDUIT, ConduitTerminationMode.NONE)
+                            connections[direction] = ConduitConnection(ConduitConnectionType.SINGLE_CONDUIT, ConduitTerminationMode.NONE, DyeColor.RED, DyeColor.RED)
                         } else {
-                            connections[direction] = ConduitConnection(ConduitConnectionType.MULTI_CONDUIT, ConduitTerminationMode.NONE)
+                            connections[direction] = ConduitConnection(ConduitConnectionType.MULTI_CONDUIT, ConduitTerminationMode.NONE, DyeColor.RED, DyeColor.RED)
                         }
 
                         markDirty = true

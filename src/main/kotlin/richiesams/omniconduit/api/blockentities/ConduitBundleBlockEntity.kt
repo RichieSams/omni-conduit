@@ -13,6 +13,7 @@ import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket
 import net.minecraft.registry.RegistryWrapper
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
+import net.minecraft.util.DyeColor
 import net.minecraft.util.Hand
 import net.minecraft.util.ItemScatterer
 import net.minecraft.util.collection.DefaultedList
@@ -56,7 +57,7 @@ class ConduitBundleBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity
 
     private var conduitEntities: MutableList<ConduitEntity> = ArrayList()
 
-    private var conduitRenderShape: AtomicReference<ConduitRenderShape> = AtomicReference(ConduitRenderShape(ArrayList(), ArrayList()))
+    private var conduitRenderShape: AtomicReference<ConduitRenderShape> = AtomicReference(ConduitRenderShape(ArrayList(), ArrayList(), ArrayList()))
 
     private var connectionReferences: HashMap<Box, ConduitReference> = HashMap()
     private var terminationReferences: HashMap<Box, ConduitReference> = HashMap()
@@ -186,18 +187,13 @@ class ConduitBundleBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity
     }
 
     private fun regenerateShapesAndLookups() {
-        // TODO: We need to have a lookup table (or multiple) that says, "this box represents X connection / core / termination"
-        //       So we can do outlines and click events. IE, wrench click a connection to remove it, or add it back
-        //
-        // Maybe we de-normalize it though. Have a render-only struct that's POD and behind an atomic. And then have the more
-        // complicated lookup in the BlockEntity itself, but only usable outside of rendering
-
-
         val coreShapes = HashSet<CoreShape>()
         val connectionShapes = ArrayList<ConnectionShape>()
+        val terminationShapes = ArrayList<TerminationShape>()
 
         var coreBoundingBox: Box? = null
         val connectorBoundingBoxes = HashMap<Direction, Box>()
+        val terminatorBoundingBoxes = ArrayList<Box>()
 
         val connectionRefs = HashMap<Box, ConduitReference>()
         val terminationRefs = HashMap<Box, ConduitReference>()
@@ -247,7 +243,26 @@ class ConduitBundleBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity
                     }
 
                     ConduitConnectionType.TERMINATION -> {
-                        TODO()
+                        offset = ConduitOffset.NONE
+                        noneCore = true
+
+                        terminationShapes.add(
+                            TerminationShape(
+                                backingConduit.type,
+                                ConduitShapeHelper.terminatorOuterFromDirection(direction),
+                                ConduitShapeHelper.terminatorInnerFromDirection(direction),
+                                ConduitShapeHelper.terminatorIOConnectorFromDirection(direction),
+                                connection.terminationMode,
+                                DyeColor.RED,
+                                DyeColor.BLUE,
+                                direction,
+                            )
+                        )
+
+                        val boundingBox = ConduitShapeHelper.terminatorBoundingBox(direction)
+
+                        terminationRefs[boundingBox] = ConduitReference(conduitEntity, direction)
+                        terminatorBoundingBoxes.add(boundingBox)
                     }
                 }
 
@@ -385,14 +400,14 @@ class ConduitBundleBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity
         coreReferences = coreRefs
 
         // The bounding box is the Boolean OR of all the individual bounding boxes
-        val boundingBoxes: List<Box> = connectorBoundingBoxes.values + listOf(coreBoundingBox!!)
+        val boundingBoxes: List<Box> = connectorBoundingBoxes.values + listOf(coreBoundingBox!!) + terminatorBoundingBoxes
         boundingBox = boundingBoxes.stream()
             .map { box: Box -> VoxelShapes.cuboid(box) }
             .reduce { v1: VoxelShape, v2: VoxelShape -> VoxelShapes.combineAndSimplify(v1, v2, BooleanBiFunction.OR) }
             .orElseGet { VoxelShapes.fullCube() }
 
         // Now update the atomic, so the next render frame can see it
-        conduitRenderShape.set(ConduitRenderShape(coreShapes.toList(), connectionShapes))
+        conduitRenderShape.set(ConduitRenderShape(coreShapes.toList(), connectionShapes, terminationShapes))
     }
 
     fun getBoundingBoxShape(): VoxelShape {

@@ -2,7 +2,9 @@ package richiesams.omniconduit.conduitentities
 
 import net.fabricmc.fabric.api.lookup.v1.block.BlockApiCache
 import net.minecraft.block.BlockState
+import net.minecraft.block.ChestBlock
 import net.minecraft.server.world.ServerWorld
+import net.minecraft.util.DyeColor
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import richiesams.omniconduit.api.BlockApiLookups
@@ -33,14 +35,22 @@ class ItemConduitEntity(conduit: Conduit, blockEntity: ConduitBundleBlockEntity)
                 if (otherConduitBundle != null) {
                     if (otherConduitBundle.hasConduitOfType(conduit.javaClass)) {
                         if (otherConduitBundle.conduitCount() == 1) {
-                            connections[direction] = ConduitConnection(ConduitConnectionType.SINGLE_CONDUIT, ConduitTerminationMode.NONE)
+                            connections[direction] = ConduitConnection(ConduitConnectionType.SINGLE_CONDUIT, ConduitTerminationMode.NONE, DyeColor.RED, DyeColor.RED)
                         } else {
-                            connections[direction] = ConduitConnection(ConduitConnectionType.MULTI_CONDUIT, ConduitTerminationMode.NONE)
+                            connections[direction] = ConduitConnection(ConduitConnectionType.MULTI_CONDUIT, ConduitTerminationMode.NONE, DyeColor.RED, DyeColor.RED)
                         }
 
                         markDirty = true
                         continue
                     }
+                }
+
+                val blockState = world.getBlockState(pos.offset(direction))
+                if (blockState != null && blockState.block is ChestBlock) {
+                    connections[direction] = ConduitConnection(ConduitConnectionType.TERMINATION, ConduitTerminationMode.INPUT_OUTPUT, DyeColor.RED, DyeColor.RED)
+
+                    markDirty = true
+                    continue
                 }
 
                 if (connections.remove(direction) != null) {
