@@ -12,6 +12,7 @@ import net.minecraft.client.render.block.entity.BlockEntityRendererFactory
 import net.minecraft.client.texture.Sprite
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.screen.PlayerScreenHandler
+import net.minecraft.util.DyeColor
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
@@ -22,13 +23,21 @@ import richiesams.omniconduit.OmniConduitModBase
 import richiesams.omniconduit.api.OnmiConduitRegistries
 import richiesams.omniconduit.api.blockentities.ConduitBundleBlockEntity
 import richiesams.omniconduit.api.conduits.ConduitDisplayMode
+import richiesams.omniconduit.api.conduits.ConduitTerminationMode
 import richiesams.omniconduit.items.YetaWrenchItem
 import richiesams.omniconduit.util.SpriteReference
+import richiesams.omniconduit.util.Vec4f
 
 @Environment(EnvType.CLIENT)
 class ConduitBundleBlockEntityRenderer(ctx: BlockEntityRendererFactory.Context?) : BlockEntityRenderer<ConduitBundleBlockEntity> {
     companion object {
-        private val wireFrame: SpriteReference = SpriteReference(Identifier(OmniConduitModBase.MOD_ID, "block/conduit/wire_frame"), Vec2f(0.0f, 0.0f), Vec2f(1.0f, 1.0f))
+        private val wireFrameID = Identifier(OmniConduitModBase.MOD_ID, "block/conduit/wire_frame")
+        private val terminatorID = Identifier(OmniConduitModBase.MOD_ID, "block/conduit/conduit_terminator")
+        private val inArrowID = Identifier(OmniConduitModBase.MOD_ID, "block/conduit/conduit_terminator_in")
+        private val outArrowID = Identifier(OmniConduitModBase.MOD_ID, "block/conduit/conduit_terminator_out")
+        private val inOutInArrowID = Identifier(OmniConduitModBase.MOD_ID, "block/conduit/conduit_terminator_in_out_in")
+        private val inOutOutArrowID = Identifier(OmniConduitModBase.MOD_ID, "block/conduit/conduit_terminator_in_out_out")
+
     }
 
     private val sprites: HashMap<Identifier, Sprite> = HashMap()
@@ -55,7 +64,12 @@ class ConduitBundleBlockEntityRenderer(ctx: BlockEntityRendererFactory.Context?)
         }
 
         // Fetch all our misc sprites
-        sprites[wireFrame.identifier] = textureGetter.apply(wireFrame.identifier)
+        sprites[wireFrameID] = textureGetter.apply(wireFrameID)
+        sprites[terminatorID] = textureGetter.apply(terminatorID)
+        sprites[inArrowID] = textureGetter.apply(inArrowID)
+        sprites[outArrowID] = textureGetter.apply(outArrowID)
+        sprites[inOutInArrowID] = textureGetter.apply(inOutInArrowID)
+        sprites[inOutOutArrowID] = textureGetter.apply(inOutOutArrowID)
         missingSprite = textureGetter.apply(Identifier(OmniConduitModBase.MOD_ID, "intentionally_missing"))
     }
 
@@ -411,208 +425,623 @@ class ConduitBundleBlockEntityRenderer(ctx: BlockEntityRendererFactory.Context?)
                     }
                 }
             } else {
-                val sprite = sprites[wireFrame.identifier] ?: missingSprite
-
+                val faces: Array<Direction>
                 when (connection.direction) {
                     Direction.UP -> {
-                        wireFrameFaces.add(
-                            WireFrameCuboidFace(
-                                Direction.NORTH,
-                                connection.box,
-                                Rotation.DEGREES_270
-                            )
-                        )
-                        wireFrameFaces.add(
-                            WireFrameCuboidFace(
-                                Direction.SOUTH,
-                                connection.box,
-                                Rotation.DEGREES_270
-                            )
-                        )
-                        wireFrameFaces.add(
-                            WireFrameCuboidFace(
-                                Direction.EAST,
-                                connection.box,
-                                Rotation.DEGREES_270
-                            )
-                        )
-                        wireFrameFaces.add(
-                            WireFrameCuboidFace(
-                                Direction.WEST,
-                                connection.box,
-                                Rotation.DEGREES_270
-                            )
-                        )
+                        faces = arrayOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
                     }
 
                     Direction.DOWN -> {
-                        wireFrameFaces.add(
-                            WireFrameCuboidFace(
-                                Direction.NORTH,
-                                connection.box,
-                                Rotation.DEGREES_90
-                            )
-                        )
-                        wireFrameFaces.add(
-                            WireFrameCuboidFace(
-                                Direction.SOUTH,
-                                connection.box,
-                                Rotation.DEGREES_90
-                            )
-                        )
-                        wireFrameFaces.add(
-                            WireFrameCuboidFace(
-                                Direction.EAST,
-                                connection.box,
-                                Rotation.DEGREES_90
-                            )
-                        )
-                        wireFrameFaces.add(
-                            WireFrameCuboidFace(
-                                Direction.WEST,
-                                connection.box,
-                                Rotation.DEGREES_90
-                            )
-                        )
+                        faces = arrayOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
                     }
 
                     Direction.NORTH -> {
-                        wireFrameFaces.add(
-                            WireFrameCuboidFace(
-                                Direction.EAST,
-                                connection.box,
-                                Rotation.DEGREES_0
-                            )
-                        )
-                        wireFrameFaces.add(
-                            WireFrameCuboidFace(
-                                Direction.WEST,
-                                connection.box,
-                                Rotation.DEGREES_180
-                            )
-                        )
-                        wireFrameFaces.add(
-                            WireFrameCuboidFace(
-                                Direction.UP,
-                                connection.box,
-                                Rotation.DEGREES_90
-                            )
-                        )
-                        wireFrameFaces.add(
-                            WireFrameCuboidFace(
-                                Direction.DOWN,
-                                connection.box,
-                                Rotation.DEGREES_270
-                            )
-                        )
+                        faces = arrayOf(Direction.UP, Direction.DOWN, Direction.EAST, Direction.WEST)
                     }
 
                     Direction.SOUTH -> {
-                        wireFrameFaces.add(
-                            WireFrameCuboidFace(
-                                Direction.EAST,
-                                connection.box,
-                                Rotation.DEGREES_180
-                            )
-                        )
-                        wireFrameFaces.add(
-                            WireFrameCuboidFace(
-                                Direction.WEST,
-                                connection.box,
-                                Rotation.DEGREES_0
-                            )
-                        )
-                        wireFrameFaces.add(
-                            WireFrameCuboidFace(
-                                Direction.UP,
-                                connection.box,
-                                Rotation.DEGREES_270
-                            )
-                        )
-                        wireFrameFaces.add(
-                            WireFrameCuboidFace(
-                                Direction.DOWN,
-                                connection.box,
-                                Rotation.DEGREES_90
-                            )
-                        )
+                        faces = arrayOf(Direction.UP, Direction.DOWN, Direction.EAST, Direction.WEST)
                     }
 
                     Direction.EAST -> {
-                        wireFrameFaces.add(
-                            WireFrameCuboidFace(
-                                Direction.NORTH,
-                                connection.box,
-                                Rotation.DEGREES_180
-                            )
-                        )
-                        wireFrameFaces.add(
-                            WireFrameCuboidFace(
-                                Direction.SOUTH,
-                                connection.box,
-                                Rotation.DEGREES_0
-                            )
-                        )
-                        wireFrameFaces.add(
-                            WireFrameCuboidFace(
-                                Direction.UP,
-                                connection.box,
-                                Rotation.DEGREES_180
-                            )
-                        )
-                        wireFrameFaces.add(
-                            WireFrameCuboidFace(
-                                Direction.DOWN,
-                                connection.box,
-                                Rotation.DEGREES_0
-                            )
-                        )
+                        faces = arrayOf(Direction.UP, Direction.DOWN, Direction.NORTH, Direction.SOUTH)
                     }
 
                     Direction.WEST -> {
-                        wireFrameFaces.add(
-                            WireFrameCuboidFace(
-                                Direction.NORTH,
-                                connection.box,
-                                Rotation.DEGREES_0
-                            )
+                        faces = arrayOf(Direction.UP, Direction.DOWN, Direction.NORTH, Direction.SOUTH)
+                    }
+                }
+
+                for (face in faces) {
+                    wireFrameFaces.add(
+                        WireFrameCuboidFace(
+                            face,
+                            connection.box,
+                            Rotation.DEGREES_0
                         )
-                        wireFrameFaces.add(
-                            WireFrameCuboidFace(
-                                Direction.SOUTH,
-                                connection.box,
-                                Rotation.DEGREES_180
-                            )
-                        )
-                        wireFrameFaces.add(
-                            WireFrameCuboidFace(
-                                Direction.UP,
-                                connection.box,
-                                Rotation.DEGREES_0
-                            )
-                        )
-                        wireFrameFaces.add(
-                            WireFrameCuboidFace(
-                                Direction.DOWN,
-                                connection.box,
-                                Rotation.DEGREES_180
-                            )
+                    )
+                }
+            }
+        }
+
+        // Then render the terminators
+        for (termination in shape.terminations) {
+            val solid: Boolean = when (mode) {
+                // ALL and CONFIGURE will always display normally
+                ConduitDisplayMode.ALL.type -> true
+                ConduitDisplayMode.CONFIGURE.type -> true
+                // NONE will always display wireframe
+                ConduitDisplayMode.NONE.type -> false
+                // If we match the mode then we display normally
+                termination.type -> true
+                // If not, then we display wireframe
+                else -> false
+            }
+
+            if (solid) {
+                val sprite = sprites[terminatorID] ?: missingSprite
+
+                val faceUVFrom = Vec2f(0.0f, 0.0f)
+                val faceUVTo = Vec2f(1.0f, 1.0f)
+                val edgeUVFrom = Vec2f(0.4f, 0.6f)
+                val edgeUVTo = Vec2f(0.4f, 0.6f)
+
+                // Render the outer box
+                kotlin.run {
+                    // We need all the faces for this
+                    val edges: Array<Direction>
+                    val faces: Array<Direction>
+                    when (termination.direction) {
+                        Direction.UP -> {
+                            edges = arrayOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
+                            faces = arrayOf(Direction.UP, Direction.DOWN)
+                        }
+
+                        Direction.DOWN -> {
+                            edges = arrayOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
+                            faces = arrayOf(Direction.UP, Direction.DOWN)
+                        }
+
+                        Direction.NORTH -> {
+                            edges = arrayOf(Direction.UP, Direction.DOWN, Direction.EAST, Direction.WEST)
+                            faces = arrayOf(Direction.NORTH, Direction.SOUTH)
+                        }
+
+                        Direction.SOUTH -> {
+                            edges = arrayOf(Direction.UP, Direction.DOWN, Direction.EAST, Direction.WEST)
+                            faces = arrayOf(Direction.NORTH, Direction.SOUTH)
+                        }
+
+                        Direction.EAST -> {
+                            edges = arrayOf(Direction.UP, Direction.DOWN, Direction.EAST, Direction.WEST)
+                            faces = arrayOf(Direction.NORTH, Direction.SOUTH)
+                        }
+
+                        Direction.WEST -> {
+                            edges = arrayOf(Direction.UP, Direction.DOWN, Direction.EAST, Direction.WEST)
+                            faces = arrayOf(Direction.NORTH, Direction.SOUTH)
+                        }
+                    }
+
+                    for (direction in edges) {
+                        renderCuboidFace(
+                            vertexConsumer,
+                            positionMatrix,
+                            direction,
+                            termination.outerBox,
+                            sprite,
+                            edgeUVFrom,
+                            edgeUVTo,
+                            Rotation.DEGREES_0
                         )
                     }
+                    for (direction in faces) {
+                        renderCuboidFace(
+                            vertexConsumer,
+                            positionMatrix,
+                            direction,
+                            termination.outerBox,
+                            sprite,
+                            faceUVFrom,
+                            faceUVTo,
+                            Rotation.DEGREES_0
+                        )
+                    }
+                }
+
+                // Render the inner box
+                kotlin.run {
+                    // We can leave off the face next to the outer box
+                    val edges: Array<Direction>
+                    val face: Direction
+                    when (termination.direction) {
+                        Direction.UP -> {
+                            edges = arrayOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
+                            face = Direction.DOWN
+                        }
+
+                        Direction.DOWN -> {
+                            edges = arrayOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
+                            face = Direction.UP
+                        }
+
+                        Direction.NORTH -> {
+                            edges = arrayOf(Direction.UP, Direction.DOWN, Direction.EAST, Direction.WEST)
+                            face = Direction.SOUTH
+                        }
+
+                        Direction.SOUTH -> {
+                            edges = arrayOf(Direction.UP, Direction.DOWN, Direction.EAST, Direction.WEST)
+                            face = Direction.NORTH
+                        }
+
+                        Direction.EAST -> {
+                            edges = arrayOf(Direction.UP, Direction.DOWN, Direction.EAST, Direction.WEST)
+                            face = Direction.WEST
+                        }
+
+                        Direction.WEST -> {
+                            edges = arrayOf(Direction.UP, Direction.DOWN, Direction.EAST, Direction.WEST)
+                            face = Direction.EAST
+                        }
+                    }
+
+                    for (direction in edges) {
+                        renderCuboidFace(
+                            vertexConsumer,
+                            positionMatrix,
+                            direction,
+                            termination.innerBox,
+                            sprite,
+                            edgeUVFrom,
+                            edgeUVTo,
+                            Rotation.DEGREES_0
+                        )
+                    }
+                    renderCuboidFace(
+                        vertexConsumer,
+                        positionMatrix,
+                        face,
+                        termination.innerBox,
+                        sprite,
+                        faceUVFrom,
+                        faceUVTo,
+                        Rotation.DEGREES_0
+                    )
+                }
+
+                // Render the io connector
+                kotlin.run {
+                    // We can leave off the face next to the inner box
+                    val edges: Array<Direction>
+                    val face: Direction
+                    when (termination.direction) {
+                        Direction.UP -> {
+                            edges = arrayOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
+                            face = Direction.DOWN
+                        }
+
+                        Direction.DOWN -> {
+                            edges = arrayOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
+                            face = Direction.UP
+                        }
+
+                        Direction.NORTH -> {
+                            edges = arrayOf(Direction.UP, Direction.DOWN, Direction.EAST, Direction.WEST)
+                            face = Direction.SOUTH
+                        }
+
+                        Direction.SOUTH -> {
+                            edges = arrayOf(Direction.UP, Direction.DOWN, Direction.EAST, Direction.WEST)
+                            face = Direction.NORTH
+                        }
+
+                        Direction.EAST -> {
+                            edges = arrayOf(Direction.UP, Direction.DOWN, Direction.NORTH, Direction.SOUTH)
+                            face = Direction.WEST
+                        }
+
+                        Direction.WEST -> {
+                            edges = arrayOf(Direction.UP, Direction.DOWN, Direction.NORTH, Direction.SOUTH)
+                            face = Direction.EAST
+                        }
+                    }
+
+                    for (direction in edges) {
+                        renderCuboidFace(
+                            vertexConsumer,
+                            positionMatrix,
+                            direction,
+                            termination.ioConnectorBox,
+                            sprite,
+                            edgeUVFrom,
+                            edgeUVTo,
+                            Rotation.DEGREES_0
+                        )
+                    }
+                    renderCuboidFace(
+                        vertexConsumer,
+                        positionMatrix,
+                        face,
+                        termination.ioConnectorBox,
+                        sprite,
+                        faceUVFrom,
+                        faceUVTo,
+                        Rotation.DEGREES_0
+                    )
+                }
+
+                // Render the io connector arrows
+                kotlin.run {
+                    val ioArrowSprites: Array<Pair<Sprite, DyeColor>>
+                    when (termination.terminationMode) {
+                        ConduitTerminationMode.NONE -> {
+                            throw RuntimeException("Conduit Terminator with NONE type")
+                        }
+
+                        ConduitTerminationMode.INPUT_OUTPUT -> {
+                            ioArrowSprites = arrayOf(
+                                Pair(sprites[inOutInArrowID] ?: missingSprite, DyeColor.RED),
+                                Pair(sprites[inOutOutArrowID] ?: missingSprite, DyeColor.RED),
+                            )
+                        }
+
+                        ConduitTerminationMode.INPUT_ONLY -> {
+                            ioArrowSprites = arrayOf(Pair(sprites[inArrowID] ?: missingSprite, DyeColor.RED))
+
+                        }
+
+                        ConduitTerminationMode.OUTPUT_ONLY -> {
+                            ioArrowSprites = arrayOf(Pair(sprites[outArrowID] ?: missingSprite, DyeColor.RED))
+                        }
+                    }
+
+                    val uvFrom = Vec2f(0.0f, 0.0f)
+                    val uvTo = Vec2f(1.0f, 1.0f)
+
+                    for (pair in ioArrowSprites) {
+                        val ioArrowSprite = pair.first
+                        val dyeColor = pair.second
+                        val colorComponents = dyeColor.colorComponents
+                        val color = Vec4f(colorComponents[0], colorComponents[1], colorComponents[2], 1.0f)
+
+                        when (termination.direction) {
+                            Direction.UP -> {
+                                renderCuboidFace(
+                                    vertexConsumer,
+                                    positionMatrix,
+                                    Direction.NORTH,
+                                    termination.ioConnectorBox,
+                                    ioArrowSprite,
+                                    uvFrom,
+                                    uvTo,
+                                    Rotation.DEGREES_270,
+                                    color,
+                                )
+                                renderCuboidFace(
+                                    vertexConsumer,
+                                    positionMatrix,
+                                    Direction.SOUTH,
+                                    termination.ioConnectorBox,
+                                    ioArrowSprite,
+                                    uvFrom,
+                                    uvTo,
+                                    Rotation.DEGREES_270,
+                                    color,
+                                )
+                                renderCuboidFace(
+                                    vertexConsumer,
+                                    positionMatrix,
+                                    Direction.EAST,
+                                    termination.ioConnectorBox,
+                                    ioArrowSprite,
+                                    uvFrom,
+                                    uvTo,
+                                    Rotation.DEGREES_270,
+                                    color,
+                                )
+                                renderCuboidFace(
+                                    vertexConsumer,
+                                    positionMatrix,
+                                    Direction.WEST,
+                                    termination.ioConnectorBox,
+                                    ioArrowSprite,
+                                    uvFrom,
+                                    uvTo,
+                                    Rotation.DEGREES_270,
+                                    color,
+                                )
+                            }
+
+                            Direction.DOWN -> {
+                                renderCuboidFace(
+                                    vertexConsumer,
+                                    positionMatrix,
+                                    Direction.NORTH,
+                                    termination.ioConnectorBox,
+                                    ioArrowSprite,
+                                    uvFrom,
+                                    uvTo,
+                                    Rotation.DEGREES_90,
+                                    color,
+                                )
+                                renderCuboidFace(
+                                    vertexConsumer,
+                                    positionMatrix,
+                                    Direction.SOUTH,
+                                    termination.ioConnectorBox,
+                                    ioArrowSprite,
+                                    uvFrom,
+                                    uvTo,
+                                    Rotation.DEGREES_90,
+                                    color,
+                                )
+                                renderCuboidFace(
+                                    vertexConsumer,
+                                    positionMatrix,
+                                    Direction.EAST,
+                                    termination.ioConnectorBox,
+                                    ioArrowSprite,
+                                    uvFrom,
+                                    uvTo,
+                                    Rotation.DEGREES_90,
+                                    color,
+                                )
+                                renderCuboidFace(
+                                    vertexConsumer,
+                                    positionMatrix,
+                                    Direction.WEST,
+                                    termination.ioConnectorBox,
+                                    ioArrowSprite,
+                                    uvFrom,
+                                    uvTo,
+                                    Rotation.DEGREES_90,
+                                    color,
+                                )
+                            }
+
+                            Direction.NORTH -> {
+                                renderCuboidFace(
+                                    vertexConsumer,
+                                    positionMatrix,
+                                    Direction.EAST,
+                                    termination.ioConnectorBox,
+                                    ioArrowSprite,
+                                    uvFrom,
+                                    uvTo,
+                                    Rotation.DEGREES_0,
+                                    color,
+                                )
+                                renderCuboidFace(
+                                    vertexConsumer,
+                                    positionMatrix,
+                                    Direction.WEST,
+                                    termination.ioConnectorBox,
+                                    ioArrowSprite,
+                                    uvFrom,
+                                    uvTo,
+                                    Rotation.DEGREES_180,
+                                    color,
+                                )
+                                renderCuboidFace(
+                                    vertexConsumer,
+                                    positionMatrix,
+                                    Direction.UP,
+                                    termination.ioConnectorBox,
+                                    ioArrowSprite,
+                                    uvFrom,
+                                    uvTo,
+                                    Rotation.DEGREES_90,
+                                    color,
+                                )
+                                renderCuboidFace(
+                                    vertexConsumer,
+                                    positionMatrix,
+                                    Direction.DOWN,
+                                    termination.ioConnectorBox,
+                                    ioArrowSprite,
+                                    uvFrom,
+                                    uvTo,
+                                    Rotation.DEGREES_270,
+                                    color,
+                                )
+                            }
+
+                            Direction.SOUTH -> {
+                                renderCuboidFace(
+                                    vertexConsumer,
+                                    positionMatrix,
+                                    Direction.EAST,
+                                    termination.ioConnectorBox,
+                                    ioArrowSprite,
+                                    uvFrom,
+                                    uvTo,
+                                    Rotation.DEGREES_180,
+                                    color,
+                                )
+                                renderCuboidFace(
+                                    vertexConsumer,
+                                    positionMatrix,
+                                    Direction.WEST,
+                                    termination.ioConnectorBox,
+                                    ioArrowSprite,
+                                    uvFrom,
+                                    uvTo,
+                                    Rotation.DEGREES_0,
+                                    color,
+                                )
+                                renderCuboidFace(
+                                    vertexConsumer,
+                                    positionMatrix,
+                                    Direction.UP,
+                                    termination.ioConnectorBox,
+                                    ioArrowSprite,
+                                    uvFrom,
+                                    uvTo,
+                                    Rotation.DEGREES_270,
+                                    color,
+                                )
+                                renderCuboidFace(
+                                    vertexConsumer,
+                                    positionMatrix,
+                                    Direction.DOWN,
+                                    termination.ioConnectorBox,
+                                    ioArrowSprite,
+                                    uvFrom,
+                                    uvTo,
+                                    Rotation.DEGREES_90,
+                                    color,
+                                )
+                            }
+
+                            Direction.EAST -> {
+                                renderCuboidFace(
+                                    vertexConsumer,
+                                    positionMatrix,
+                                    Direction.NORTH,
+                                    termination.ioConnectorBox,
+                                    ioArrowSprite,
+                                    uvFrom,
+                                    uvTo,
+                                    Rotation.DEGREES_180,
+                                    color,
+                                )
+                                renderCuboidFace(
+                                    vertexConsumer,
+                                    positionMatrix,
+                                    Direction.SOUTH,
+                                    termination.ioConnectorBox,
+                                    ioArrowSprite,
+                                    uvFrom,
+                                    uvTo,
+                                    Rotation.DEGREES_0,
+                                    color,
+                                )
+                                renderCuboidFace(
+                                    vertexConsumer,
+                                    positionMatrix,
+                                    Direction.UP,
+                                    termination.ioConnectorBox,
+                                    ioArrowSprite,
+                                    uvFrom,
+                                    uvTo,
+                                    Rotation.DEGREES_180,
+                                    color,
+                                )
+                                renderCuboidFace(
+                                    vertexConsumer,
+                                    positionMatrix,
+                                    Direction.DOWN,
+                                    termination.ioConnectorBox,
+                                    ioArrowSprite,
+                                    uvFrom,
+                                    uvTo,
+                                    Rotation.DEGREES_0,
+                                    color,
+                                )
+                            }
+
+                            Direction.WEST -> {
+                                renderCuboidFace(
+                                    vertexConsumer,
+                                    positionMatrix,
+                                    Direction.NORTH,
+                                    termination.ioConnectorBox,
+                                    ioArrowSprite,
+                                    uvFrom,
+                                    uvTo,
+                                    Rotation.DEGREES_0,
+                                    color,
+                                )
+                                renderCuboidFace(
+                                    vertexConsumer,
+                                    positionMatrix,
+                                    Direction.SOUTH,
+                                    termination.ioConnectorBox,
+                                    ioArrowSprite,
+                                    uvFrom,
+                                    uvTo,
+                                    Rotation.DEGREES_180,
+                                    color,
+                                )
+                                renderCuboidFace(
+                                    vertexConsumer,
+                                    positionMatrix,
+                                    Direction.UP,
+                                    termination.ioConnectorBox,
+                                    ioArrowSprite,
+                                    uvFrom,
+                                    uvTo,
+                                    Rotation.DEGREES_0,
+                                    color,
+                                )
+                                renderCuboidFace(
+                                    vertexConsumer,
+                                    positionMatrix,
+                                    Direction.DOWN,
+                                    termination.ioConnectorBox,
+                                    ioArrowSprite,
+                                    uvFrom,
+                                    uvTo,
+                                    Rotation.DEGREES_180,
+                                    color,
+                                )
+                            }
+                        }
+                    }
+                }
+            } else {
+                // Render the outer box
+                for (direction in Direction.entries) {
+                    wireFrameFaces.add(
+                        WireFrameCuboidFace(
+                            direction,
+                            termination.outerBox,
+                            Rotation.DEGREES_0
+                        )
+                    )
+                }
+
+                // Render the inner box
+                for (direction in Direction.entries) {
+                    wireFrameFaces.add(
+                        WireFrameCuboidFace(
+                            direction,
+                            termination.innerBox,
+                            Rotation.DEGREES_0
+                        )
+                    )
+                }
+
+                // Render the io connector
+                for (direction in Direction.entries) {
+                    wireFrameFaces.add(
+                        WireFrameCuboidFace(
+                            direction,
+                            termination.ioConnectorBox,
+                            Rotation.DEGREES_0
+                        )
+                    )
                 }
             }
         }
 
         // Now we render all the wireframe faces
-        val sprite = sprites[wireFrame.identifier] ?: missingSprite
+        val sprite = sprites[wireFrameID] ?: missingSprite
         for (face in wireFrameFaces) {
-            renderCuboidFace(vertexConsumer, positionMatrix, face.direction, face.cube, sprite, wireFrame.uvFrom, wireFrame.uvTo, face.uvRotation)
+            renderCuboidFace(vertexConsumer, positionMatrix, face.direction, face.cube, sprite, Vec2f(0.0f, 0.0f), Vec2f(1.0f, 1.0f), face.uvRotation)
         }
 
         matrices.pop()
     }
 
-    private fun renderCuboidFace(vertexConsumer: VertexConsumer, positionMatrix: Matrix4f, direction: Direction, cube: Box, sprite: Sprite, uvFrom: Vec2f, uvTo: Vec2f, uvRotation: Rotation) {
+    private fun renderCuboidFace(
+        vertexConsumer: VertexConsumer, positionMatrix: Matrix4f,
+        direction: Direction,
+        cube: Box,
+        sprite: Sprite, uvFrom: Vec2f, uvTo: Vec2f, uvRotation: Rotation,
+        color: Vec4f = Vec4f(1.0f, 1.0f, 1.0f, 1.0f)
+    ) {
         when (direction) {
             Direction.DOWN -> {
                 renderQuad(
@@ -624,7 +1053,8 @@ class ConduitBundleBlockEntityRenderer(ctx: BlockEntityRendererFactory.Context?)
                     sprite,
                     uvFrom,
                     uvTo,
-                    uvRotation
+                    uvRotation,
+                    color,
                 )
             }
 
@@ -638,7 +1068,8 @@ class ConduitBundleBlockEntityRenderer(ctx: BlockEntityRendererFactory.Context?)
                     sprite,
                     uvFrom,
                     uvTo,
-                    uvRotation
+                    uvRotation,
+                    color,
                 )
             }
 
@@ -652,7 +1083,8 @@ class ConduitBundleBlockEntityRenderer(ctx: BlockEntityRendererFactory.Context?)
                     sprite,
                     uvFrom,
                     uvTo,
-                    uvRotation
+                    uvRotation,
+                    color,
                 )
             }
 
@@ -666,7 +1098,8 @@ class ConduitBundleBlockEntityRenderer(ctx: BlockEntityRendererFactory.Context?)
                     sprite,
                     uvFrom,
                     uvTo,
-                    uvRotation
+                    uvRotation,
+                    color,
                 )
             }
 
@@ -680,7 +1113,8 @@ class ConduitBundleBlockEntityRenderer(ctx: BlockEntityRendererFactory.Context?)
                     sprite,
                     uvFrom,
                     uvTo,
-                    uvRotation
+                    uvRotation,
+                    color,
                 )
             }
 
@@ -694,7 +1128,8 @@ class ConduitBundleBlockEntityRenderer(ctx: BlockEntityRendererFactory.Context?)
                     sprite,
                     uvFrom,
                     uvTo,
-                    uvRotation
+                    uvRotation,
+                    color,
                 )
             }
         }
@@ -703,7 +1138,8 @@ class ConduitBundleBlockEntityRenderer(ctx: BlockEntityRendererFactory.Context?)
     private fun renderQuad(
         vertexConsumer: VertexConsumer, positionMatrix: Matrix4f, nominalDirection: Direction,
         vertex0: Vec3d, vertex1: Vec3d, vertex2: Vec3d, vertex3: Vec3d,
-        sprite: Sprite, uvFrom: Vec2f, uvTo: Vec2f, uvRotation: Rotation
+        sprite: Sprite, uvFrom: Vec2f, uvTo: Vec2f, uvRotation: Rotation,
+        color: Vec4f = Vec4f(1.0f, 1.0f, 1.0f, 1.0f)
     ) {
         // Shift the UV range to fit within the range of the sprite within the atlas
         val uMin: Float = sprite.minU
@@ -719,7 +1155,7 @@ class ConduitBundleBlockEntityRenderer(ctx: BlockEntityRendererFactory.Context?)
             vertex0.getY().toFloat(),
             vertex0.getZ().toFloat()
         )
-            .color(1.0f, 1.0f, 1.0f, 1.0f)
+            .color(color.x, color.y, color.z, color.w)
             .texture(uMin + uv0.x * uSpan, vMin + uv0.y * vSpan)
             .overlay(OverlayTexture.DEFAULT_UV)
             .light(15728880)
@@ -738,7 +1174,7 @@ class ConduitBundleBlockEntityRenderer(ctx: BlockEntityRendererFactory.Context?)
             vertex1.getY().toFloat(),
             vertex1.getZ().toFloat()
         )
-            .color(1.0f, 1.0f, 1.0f, 1.0f)
+            .color(color.x, color.y, color.z, color.w)
             .texture(uMin + uv1.x * uSpan, vMin + uv1.y * vSpan)
             .overlay(OverlayTexture.DEFAULT_UV)
             .light(15728880)
@@ -757,7 +1193,7 @@ class ConduitBundleBlockEntityRenderer(ctx: BlockEntityRendererFactory.Context?)
             vertex2.getY().toFloat(),
             vertex2.getZ().toFloat()
         )
-            .color(1.0f, 1.0f, 1.0f, 1.0f)
+            .color(color.x, color.y, color.z, color.w)
             .texture(uMin + uv2.x * uSpan, vMin + uv2.y * vSpan)
             .overlay(OverlayTexture.DEFAULT_UV)
             .light(15728880)
@@ -776,7 +1212,7 @@ class ConduitBundleBlockEntityRenderer(ctx: BlockEntityRendererFactory.Context?)
             vertex3.getY().toFloat(),
             vertex3.getZ().toFloat()
         )
-            .color(1.0f, 1.0f, 1.0f, 1.0f)
+            .color(color.x, color.y, color.z, color.w)
             .texture(uMin + uv3.x * uSpan, vMin + uv3.y * vSpan)
             .overlay(OverlayTexture.DEFAULT_UV)
             .light(15728880)

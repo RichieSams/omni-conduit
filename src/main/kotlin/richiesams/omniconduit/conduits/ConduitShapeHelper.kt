@@ -12,6 +12,15 @@ object ConduitShapeHelper {
     private const val CONNECTOR_WIDTH = CORE_WIDTH * 0.7
     private const val CONNECTOR_HALF_WIDTH = CONNECTOR_WIDTH / 2.0
 
+    private const val TERMINATOR_OUTER_WIDTH = 12.0 / 16.0
+    private const val TERMINATOR_OUTER_HALF_WIDTH = TERMINATOR_OUTER_WIDTH / 2.0
+    private const val TERMINATOR_INNER_WIDTH = 7.0 / 16.0
+    private const val TERMINATOR_INNER_HALF_WIDTH = TERMINATOR_INNER_WIDTH / 2.0
+    private const val TERMINATOR_THICKNESS = 0.5 / 16.0
+    private const val TERMINATOR_2X_THICKNESS = 1.0 / 16.0
+    private const val TERMINATOR_IO_CONNECTOR_WIDTH = 2.75 / 16.0
+    private const val TERMINATOR_IO_CONNECTOR_HALF_WIDTH = TERMINATOR_IO_CONNECTOR_WIDTH / 2.0
+
     private const val OUTLINE_WIDTH = 3.25 / 16.0
     private const val OUTLINE_HALF_WIDTH = OUTLINE_WIDTH / 2.0
 
@@ -252,5 +261,189 @@ object ConduitShapeHelper {
             connectorCuboid.minX.coerceAtLeast(0.0), connectorCuboid.minY.coerceAtLeast(0.0), connectorCuboid.minZ.coerceAtLeast(0.0),
             connectorCuboid.maxX.coerceAtMost(1.0), connectorCuboid.maxY.coerceAtMost(1.0), connectorCuboid.maxZ.coerceAtMost(1.0)
         )
+    }
+
+    fun terminatorOuterFromDirection(connectionDirection: Direction): Box {
+        return when (connectionDirection) {
+            Direction.DOWN -> {
+                Box(
+                    0.5 - TERMINATOR_OUTER_HALF_WIDTH, 0.0, 0.5 - TERMINATOR_OUTER_HALF_WIDTH,
+                    0.5 + TERMINATOR_OUTER_HALF_WIDTH, TERMINATOR_THICKNESS, 0.5 + TERMINATOR_OUTER_HALF_WIDTH
+                )
+            }
+
+            Direction.UP -> {
+                Box(
+                    0.5 - TERMINATOR_OUTER_HALF_WIDTH, 1.0 - TERMINATOR_THICKNESS, 0.5 - TERMINATOR_OUTER_HALF_WIDTH,
+                    0.5 + TERMINATOR_OUTER_HALF_WIDTH, 1.0, 0.5 + TERMINATOR_OUTER_HALF_WIDTH
+                )
+            }
+
+            Direction.NORTH -> {
+                Box(
+                    0.5 - TERMINATOR_OUTER_HALF_WIDTH, 0.5 - TERMINATOR_OUTER_HALF_WIDTH, 0.0,
+                    0.5 + TERMINATOR_OUTER_HALF_WIDTH, 0.5 + TERMINATOR_OUTER_HALF_WIDTH, TERMINATOR_THICKNESS
+                )
+            }
+
+            Direction.SOUTH -> {
+                Box(
+                    0.5 - TERMINATOR_OUTER_HALF_WIDTH, 0.5 - TERMINATOR_OUTER_HALF_WIDTH, 1.0 - TERMINATOR_THICKNESS,
+                    0.5 + TERMINATOR_OUTER_HALF_WIDTH, 0.5 + TERMINATOR_OUTER_HALF_WIDTH, 1.0
+                )
+            }
+
+            Direction.WEST -> {
+                Box(
+                    0.0, 0.5 - TERMINATOR_OUTER_HALF_WIDTH, 0.5 - TERMINATOR_OUTER_HALF_WIDTH,
+                    TERMINATOR_THICKNESS, 0.5 + TERMINATOR_OUTER_HALF_WIDTH, 0.5 + TERMINATOR_OUTER_HALF_WIDTH
+                )
+            }
+
+            Direction.EAST -> {
+                Box(
+                    1.0 - TERMINATOR_THICKNESS, 0.5 - TERMINATOR_OUTER_HALF_WIDTH, 0.5 - TERMINATOR_OUTER_HALF_WIDTH,
+                    1.0, 0.5 + TERMINATOR_OUTER_HALF_WIDTH, 0.5 + TERMINATOR_OUTER_HALF_WIDTH
+                )
+            }
+        }
+    }
+
+    fun terminatorInnerFromDirection(connectionDirection: Direction): Box {
+        return when (connectionDirection) {
+            Direction.DOWN -> {
+                Box(
+                    0.5 - TERMINATOR_INNER_HALF_WIDTH, TERMINATOR_THICKNESS, 0.5 - TERMINATOR_INNER_HALF_WIDTH,
+                    0.5 + TERMINATOR_INNER_HALF_WIDTH, TERMINATOR_2X_THICKNESS, 0.5 + TERMINATOR_INNER_HALF_WIDTH
+                )
+            }
+
+            Direction.UP -> {
+                Box(
+                    0.5 - TERMINATOR_INNER_HALF_WIDTH, 1.0 - TERMINATOR_2X_THICKNESS, 0.5 - TERMINATOR_INNER_HALF_WIDTH,
+                    0.5 + TERMINATOR_INNER_HALF_WIDTH, 1.0 - TERMINATOR_THICKNESS, 0.5 + TERMINATOR_INNER_HALF_WIDTH
+                )
+            }
+
+            Direction.NORTH -> {
+                Box(
+                    0.5 - TERMINATOR_INNER_HALF_WIDTH, 0.5 - TERMINATOR_INNER_HALF_WIDTH, TERMINATOR_THICKNESS,
+                    0.5 + TERMINATOR_INNER_HALF_WIDTH, 0.5 + TERMINATOR_INNER_HALF_WIDTH, TERMINATOR_2X_THICKNESS
+                )
+            }
+
+            Direction.SOUTH -> {
+                Box(
+                    0.5 - TERMINATOR_INNER_HALF_WIDTH, 0.5 - TERMINATOR_INNER_HALF_WIDTH, 1.0 - TERMINATOR_2X_THICKNESS,
+                    0.5 + TERMINATOR_INNER_HALF_WIDTH, 0.5 + TERMINATOR_INNER_HALF_WIDTH, 1.0 - TERMINATOR_THICKNESS
+                )
+            }
+
+            Direction.WEST -> {
+                Box(
+                    TERMINATOR_THICKNESS, 0.5 - TERMINATOR_INNER_HALF_WIDTH, 0.5 - TERMINATOR_INNER_HALF_WIDTH,
+                    TERMINATOR_2X_THICKNESS, 0.5 + TERMINATOR_INNER_HALF_WIDTH, 0.5 + TERMINATOR_INNER_HALF_WIDTH
+                )
+            }
+
+            Direction.EAST -> {
+                Box(
+                    1.0 - TERMINATOR_2X_THICKNESS, 0.5 - TERMINATOR_INNER_HALF_WIDTH, 0.5 - TERMINATOR_INNER_HALF_WIDTH,
+                    1.0 - TERMINATOR_THICKNESS, 0.5 + TERMINATOR_INNER_HALF_WIDTH, 0.5 + TERMINATOR_INNER_HALF_WIDTH
+                )
+            }
+        }
+    }
+
+    fun terminatorIOConnectorFromDirection(connectionDirection: Direction): Box {
+        return when (connectionDirection) {
+            Direction.DOWN -> {
+                Box(
+                    0.5 - TERMINATOR_IO_CONNECTOR_HALF_WIDTH, TERMINATOR_2X_THICKNESS, 0.5 - TERMINATOR_IO_CONNECTOR_HALF_WIDTH,
+                    0.5 + TERMINATOR_IO_CONNECTOR_HALF_WIDTH, TERMINATOR_2X_THICKNESS + TERMINATOR_IO_CONNECTOR_WIDTH, 0.5 + TERMINATOR_IO_CONNECTOR_HALF_WIDTH
+                )
+            }
+
+            Direction.UP -> {
+                Box(
+                    0.5 - TERMINATOR_IO_CONNECTOR_HALF_WIDTH, 1.0 - TERMINATOR_2X_THICKNESS - TERMINATOR_IO_CONNECTOR_WIDTH, 0.5 - TERMINATOR_IO_CONNECTOR_HALF_WIDTH,
+                    0.5 + TERMINATOR_IO_CONNECTOR_HALF_WIDTH, 1.0 - TERMINATOR_2X_THICKNESS, 0.5 + TERMINATOR_IO_CONNECTOR_HALF_WIDTH
+                )
+            }
+
+            Direction.NORTH -> {
+                Box(
+                    0.5 - TERMINATOR_IO_CONNECTOR_HALF_WIDTH, 0.5 - TERMINATOR_IO_CONNECTOR_HALF_WIDTH, TERMINATOR_2X_THICKNESS,
+                    0.5 + TERMINATOR_IO_CONNECTOR_HALF_WIDTH, 0.5 + TERMINATOR_IO_CONNECTOR_HALF_WIDTH, TERMINATOR_2X_THICKNESS + TERMINATOR_IO_CONNECTOR_WIDTH
+                )
+            }
+
+            Direction.SOUTH -> {
+                Box(
+                    0.5 - TERMINATOR_IO_CONNECTOR_HALF_WIDTH, 0.5 - TERMINATOR_IO_CONNECTOR_HALF_WIDTH, 1.0 - TERMINATOR_2X_THICKNESS - TERMINATOR_IO_CONNECTOR_WIDTH,
+                    0.5 + TERMINATOR_IO_CONNECTOR_HALF_WIDTH, 0.5 + TERMINATOR_IO_CONNECTOR_HALF_WIDTH, 1.0 - TERMINATOR_2X_THICKNESS
+                )
+            }
+
+            Direction.WEST -> {
+                Box(
+                    TERMINATOR_2X_THICKNESS, 0.5 - TERMINATOR_IO_CONNECTOR_HALF_WIDTH, 0.5 - TERMINATOR_IO_CONNECTOR_HALF_WIDTH,
+                    TERMINATOR_2X_THICKNESS + TERMINATOR_IO_CONNECTOR_WIDTH, 0.5 + TERMINATOR_IO_CONNECTOR_HALF_WIDTH, 0.5 + TERMINATOR_IO_CONNECTOR_HALF_WIDTH
+                )
+            }
+
+            Direction.EAST -> {
+                Box(
+                    1.0 - TERMINATOR_2X_THICKNESS - TERMINATOR_IO_CONNECTOR_WIDTH, 0.5 - TERMINATOR_IO_CONNECTOR_HALF_WIDTH, 0.5 - TERMINATOR_IO_CONNECTOR_HALF_WIDTH,
+                    1.0 - TERMINATOR_2X_THICKNESS, 0.5 + TERMINATOR_IO_CONNECTOR_HALF_WIDTH, 0.5 + TERMINATOR_IO_CONNECTOR_HALF_WIDTH
+                )
+            }
+        }
+    }
+
+    fun terminatorBoundingBox(connectionDirection: Direction): Box {
+        return when (connectionDirection) {
+            Direction.DOWN -> {
+                Box(
+                    0.5 - TERMINATOR_OUTER_HALF_WIDTH, 0.0, 0.5 - TERMINATOR_OUTER_HALF_WIDTH,
+                    0.5 + TERMINATOR_OUTER_HALF_WIDTH, TERMINATOR_2X_THICKNESS, 0.5 + TERMINATOR_OUTER_HALF_WIDTH
+                )
+            }
+
+            Direction.UP -> {
+                Box(
+                    0.5 - TERMINATOR_OUTER_HALF_WIDTH, 1.0 - TERMINATOR_2X_THICKNESS, 0.5 - TERMINATOR_OUTER_HALF_WIDTH,
+                    0.5 + TERMINATOR_OUTER_HALF_WIDTH, 1.0, 0.5 + TERMINATOR_OUTER_HALF_WIDTH
+                )
+            }
+
+            Direction.NORTH -> {
+                Box(
+                    0.5 - TERMINATOR_OUTER_HALF_WIDTH, 0.5 - TERMINATOR_OUTER_HALF_WIDTH, 0.0,
+                    0.5 + TERMINATOR_OUTER_HALF_WIDTH, 0.5 + TERMINATOR_OUTER_HALF_WIDTH, TERMINATOR_2X_THICKNESS
+                )
+            }
+
+            Direction.SOUTH -> {
+                Box(
+                    0.5 - TERMINATOR_OUTER_HALF_WIDTH, 0.5 - TERMINATOR_OUTER_HALF_WIDTH, 1.0 - TERMINATOR_2X_THICKNESS,
+                    0.5 + TERMINATOR_OUTER_HALF_WIDTH, 0.5 + TERMINATOR_OUTER_HALF_WIDTH, 1.0
+                )
+            }
+
+            Direction.WEST -> {
+                Box(
+                    0.0, 0.5 - TERMINATOR_OUTER_HALF_WIDTH, 0.5 - TERMINATOR_OUTER_HALF_WIDTH,
+                    TERMINATOR_2X_THICKNESS, 0.5 + TERMINATOR_OUTER_HALF_WIDTH, 0.5 + TERMINATOR_OUTER_HALF_WIDTH
+                )
+            }
+
+            Direction.EAST -> {
+                Box(
+                    1.0 - TERMINATOR_2X_THICKNESS, 0.5 - TERMINATOR_OUTER_HALF_WIDTH, 0.5 - TERMINATOR_OUTER_HALF_WIDTH,
+                    1.0, 0.5 + TERMINATOR_OUTER_HALF_WIDTH, 0.5 + TERMINATOR_OUTER_HALF_WIDTH
+                )
+            }
+        }
     }
 }

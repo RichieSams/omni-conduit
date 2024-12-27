@@ -4,6 +4,7 @@ import net.minecraft.block.BlockState
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.nbt.NbtList
 import net.minecraft.server.world.ServerWorld
+import net.minecraft.util.DyeColor
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
@@ -33,8 +34,10 @@ abstract class ConduitEntity protected constructor(
                 Direction.byName(connection.getString("Direction")) ?: throw RuntimeException("Invalid direction value")
             val connectionType = ConduitConnectionType.valueOf(connection.getString("Type"))
             val terminationMode = ConduitTerminationMode.valueOf(connection.getString("TerminationMode"))
+            val terminationInputChannel = DyeColor.byName(connection.getString("TerminationInputChannel"), null)
+            val terminationOutputChannel = DyeColor.byName(connection.getString("TerminationOutputChannel"), null)
 
-            newConnections[direction] = ConduitConnection(connectionType, terminationMode)
+            newConnections[direction] = ConduitConnection(connectionType, terminationMode, terminationInputChannel!!, terminationOutputChannel!!)
         }
 
         this.connections = newConnections
@@ -48,6 +51,8 @@ abstract class ConduitEntity protected constructor(
             connection.putString("Direction", entry.key.toString())
             connection.putString("Type", entry.value.type.toString())
             connection.putString("TerminationMode", entry.value.terminationMode.toString())
+            connection.putString("TerminationInputChannel", entry.value.terminationInputChannel.toString())
+            connection.putString("TerminationOutputChannel", entry.value.terminationOutputChannel.toString())
 
             connectionsList.add(connection)
         }
